@@ -240,7 +240,7 @@ The module uses Todoist's REST API directly rather than depending on a third-par
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/TodoistInteractive.git
+git clone https://github.com/theTapp-astro/TodoistInteractive.git
 cd TodoistInteractive
 ```
 
