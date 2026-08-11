@@ -162,8 +162,13 @@ Module.register("MMM-TodoistInteractive", {
 			const footer = document.createElement("div");
 			footer.className = "todoist-footer";
 
+			const updatedTime = this.lastUpdated.toLocaleTimeString([], {
+				hour: "numeric",
+				minute: "2-digit"
+			});
+
 			footer.textContent =
-				'Updated ${this.formatTime(this.lastUpdated)}';
+				'Updated ${updatedTime}';
 
 			wrapper.appendChild(footer);
 		}
@@ -758,20 +763,6 @@ Module.register("MMM-TodoistInteractive", {
 		if (notification === "ALL_MODULES_STARTED") {
 			this.scheduleUpdates();
 		}
-	},
-
-	/*
-	 * Format a timestamp for the footer.
-	 */
-	formatTime(date) {
-		if (!(date instanceof Date)) {
-			return "";
-		}
-
-		return date.toLocaleTimeString([], {
-			hour: "numeric",
-			minute: "2-digit"
-		});
 	},
 
 
