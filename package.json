@@ -1,0 +1,26 @@
+{
+  "name": "todoistinteractive",
+  "version": "1.0.0",
+  "description": "Interactive Todoist module for MagicMirror²",
+  "main": "TodoistInteractive.js",
+  "author": "Your Name",
+  "license": "MIT",
+  "keywords": [
+    "magicmirror",
+    "magicmirror2",
+    "todoist",
+    "todo",
+    "tasks"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theTapp-astro/TodoistInteractive.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "node --check node_helper.js && node --check TodoistInteractive.js"
+  }
+}
