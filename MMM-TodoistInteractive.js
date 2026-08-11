@@ -22,6 +22,7 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Starting`);
 
 		this.tasks = [];
+		this.updatingTasks = new Set();
 		this.loading = true;
 		this.error = null;
 		this.lastUpdated = null;
@@ -144,6 +145,11 @@ Module.register("MMM-TodoistInteractive", {
 		);
 
 		checkbox.textContent = task.completed ? "✓" : "";
+		if (this.updatingTasks.has(String(task.id))) {
+			checkbox.classList.add("updating");
+			checkbox.disabled = true;
+			checkbox.textContent = "…";
+		}
 
 		checkbox.addEventListener("click", (event) => {
 			event.stopPropagation();
@@ -211,8 +217,19 @@ Module.register("MMM-TodoistInteractive", {
 			return;
 		}
 
+		const taskId = String(task.id);
+
+		// Prevent accidental double-taps while the request is pending.
+		if (this.updatingTasks.has(taskId)) {
+			return;
+		}
+
+		this.updatingTasks.add(taskId);
+
+		this.updateDom(0);
+
 		this.sendSocketNotification("TOGGLE_TASK", {
-			taskId: task.id,
+			taskId: taskId,
 			completed: !task.completed
 		});
 	},
@@ -313,19 +330,23 @@ Module.register("MMM-TodoistInteractive", {
 			return;
 		}
 
+		const taskId = String(payload.taskId);
+
+		this.updatingTasks.delete(taskId);
+
 		const task = this.tasks.find(
-			(item) => item.id === payload.taskId
+			(item) => String(item.id) === taskId
 		);
 
 		if (task) {
-			task.completed = payload.completed;
+			task.completed = Boolean(payload.completed);
 		}
 
 		this.updateDom(200);
 
 		/*
-		 * Refresh from Todoist after the mutation so
-		 * the local state cannot drift from the server.
+		 * Refresh from Todoist after the mutation so the
+		 * local state stays synchronized with the server.
 		 */
 		setTimeout(() => {
 			this.requestTasks();
