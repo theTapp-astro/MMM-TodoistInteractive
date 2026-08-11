@@ -22,9 +22,15 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Starting`);
 
 		this.tasks = [];
+		
 		this.showAddTaskDialog = false;
 		this.newTaskContent = "";
 		this.addingTask = false;
+
+		this.projects = [];
+		this.selectedProjectId = "";
+		this.selectedDueDate = "";
+		
 		this.updatingTasks = new Set();
 		this.loading = true;
 		this.error = null;
@@ -145,6 +151,10 @@ Module.register("MMM-TodoistInteractive", {
 		this.showAddTaskDialog = true;
 		this.newTaskContent = "";
 		this.addingTask = false;
+		this.selectedProjectId = "";
+		this.selectedDueDate = "";
+
+		this.sendSocketNotification("GET_PROJECTS");
 
 		this.updateDom(200);
 
@@ -159,7 +169,7 @@ Module.register("MMM-TodoistInteractive", {
 		}, 250);
 	},
 
-		createAddTaskDialog() {
+	createAddTaskDialog() {
 		const dialog = document.createElement("div");
 		dialog.className = "todoist-add-dialog";
 
@@ -168,6 +178,10 @@ Module.register("MMM-TodoistInteractive", {
 		title.textContent = "Add Task";
 
 		dialog.appendChild(title);
+
+		/*
+		 * Task name
+		 */
 
 		const input = document.createElement("input");
 		input.className = "todoist-add-task-input";
@@ -193,11 +207,127 @@ Module.register("MMM-TodoistInteractive", {
 
 		dialog.appendChild(input);
 
+		/*
+		 * Project
+		 */
+
+		const projectRow = document.createElement("div");
+		projectRow.className = "todoist-add-field";
+
+		const projectLabel = document.createElement("label");
+		projectLabel.className = "todoist-add-label";
+		projectLabel.textContent = "Project";
+
+		projectRow.appendChild(projectLabel);
+
+		const projectSelect = document.createElement("select");
+		projectSelect.className = "todoist-add-select";
+
+		const inboxOption = document.createElement("option");
+		inboxOption.value = "";
+		inboxOption.textContent = "Inbox";
+
+		projectSelect.appendChild(inboxOption);
+
+		this.projects.forEach((project) => {
+			const option = document.createElement("option");
+
+			option.value = String(project.id);
+			option.textContent = project.name;
+
+			if (
+				String(project.id) ===
+				String(this.selectedProjectId)
+			) {
+				option.selected = true;
+			}
+
+			projectSelect.appendChild(option);
+		});
+
+		projectSelect.value = this.selectedProjectId;
+
+		projectSelect.addEventListener("change", (event) => {
+			this.selectedProjectId = event.target.value;
+		});
+
+		projectRow.appendChild(projectSelect);
+		dialog.appendChild(projectRow);
+
+		/*
+		 * Due date
+		 */
+
+		const dueRow = document.createElement("div");
+		dueRow.className = "todoist-add-field";
+
+		const dueLabel = document.createElement("label");
+		dueLabel.className = "todoist-add-label";
+		dueLabel.textContent = "Due date";
+
+		dueRow.appendChild(dueLabel);
+
+		const dueSelect = document.createElement("select");
+		dueSelect.className = "todoist-add-select";
+
+		const dueOptions = [
+			{
+				value: "",
+				label: "No due date"
+			},
+			{
+				value: "today",
+				label: "Today"
+			},
+			{
+				value: "tomorrow",
+				label: "Tomorrow"
+			},
+			{
+				value: "next monday",
+				label: "Next Monday"
+			},
+			{
+				value: "next week",
+				label: "Next week"
+			}
+		];
+
+		dueOptions.forEach((dueOption) => {
+			const option = document.createElement("option");
+
+			option.value = dueOption.value;
+			option.textContent = dueOption.label;
+
+			if (
+				dueOption.value ===
+				this.selectedDueDate
+			) {
+				option.selected = true;
+			}
+
+			dueSelect.appendChild(option);
+		});
+
+		dueSelect.value = this.selectedDueDate;
+
+		dueSelect.addEventListener("change", (event) => {
+			this.selectedDueDate = event.target.value;
+		});
+
+		dueRow.appendChild(dueSelect);
+		dialog.appendChild(dueRow);
+
+		/*
+		 * Buttons
+		 */
+
 		const buttons = document.createElement("div");
 		buttons.className = "todoist-add-dialog-buttons";
 
 		const cancelButton = document.createElement("button");
-		cancelButton.className = "todoist-dialog-button todoist-cancel-button";
+		cancelButton.className =
+			"todoist-dialog-button todoist-cancel-button";
 		cancelButton.type = "button";
 		cancelButton.textContent = "Cancel";
 
@@ -208,14 +338,16 @@ Module.register("MMM-TodoistInteractive", {
 		buttons.appendChild(cancelButton);
 
 		const addButton = document.createElement("button");
-		addButton.className = "todoist-dialog-button todoist-confirm-button";
+		addButton.className =
+			"todoist-dialog-button todoist-confirm-button";
 		addButton.type = "button";
 		addButton.textContent = this.addingTask
 			? "Adding..."
 			: "Add";
 
 		addButton.disabled =
-			this.addingTask || !this.newTaskContent.trim();
+			this.addingTask ||
+			!this.newTaskContent.trim();
 
 		addButton.addEventListener("click", () => {
 			this.submitNewTask();
@@ -230,20 +362,22 @@ Module.register("MMM-TodoistInteractive", {
 
 	submitNewTask() {
 		const content = this.newTaskContent.trim();
-
+	
 		if (!content || this.addingTask) {
 			return;
 		}
-
+	
 		this.addingTask = true;
-
+	
 		this.updateDom(100);
-
+	
 		this.sendSocketNotification("ADD_TASK", {
-			content
+			content,
+			projectId: this.selectedProjectId || null,
+			dueString: this.selectedDueDate || null
 		});
 	},
-
+	
 	closeAddTaskDialog() {
 		if (this.addingTask) {
 			return;
@@ -251,7 +385,7 @@ Module.register("MMM-TodoistInteractive", {
 
 		this.showAddTaskDialog = false;
 		this.newTaskContent = "";
-
+	
 		this.updateDom(200);
 	},
 
@@ -263,9 +397,9 @@ Module.register("MMM-TodoistInteractive", {
 		taskElement.className = "todoist-task";
 
 		if (task.completed) {
-			taskElement.classList.add("completed");
+		taskElement.classList.add("completed");
 		}
-
+	
 		/*
 		 * Checkbox
 		 */
@@ -416,6 +550,10 @@ Module.register("MMM-TodoistInteractive", {
 				this.handleTaskAdded(payload);
 				break;
 
+			case "PROJECTS":
+				this.handleProjects(payload);
+				break;
+
 			default:
 				break;
 		}
@@ -427,7 +565,10 @@ Module.register("MMM-TodoistInteractive", {
 	handleTaskAdded(payload) {
 		this.addingTask = false;
 		this.showAddTaskDialog = false;
+		
 		this.newTaskContent = "";
+		this.selectedProjectId = "";
+		this.selectedDueDate = "";
 
 		this.updateDom(200);
 
@@ -563,7 +704,19 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Stopped`);
 	},
 
-	
+
+	handleProjects(payload) {
+		if (Array.isArray(payload)) {
+			this.projects = payload;
+		} else if (payload && Array.isArray(payload.projects)) {
+			this.projects = payload.projects;
+		} else {
+			this.projects = [];
+		}
+
+		this.updateDom(100);
+	},
+	f
 	/*
 	 * Format a timestamp for the footer.
 	 */
