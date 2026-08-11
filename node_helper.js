@@ -27,6 +27,10 @@ module.exports = NodeHelper.create({
 				this.toggleTask(payload);
 				break;
 
+			case "ADD_TASK":
+				this.addTask(payload);
+				break;
+				
 			default:
 				console.warn(
 					`[${this.name}] Unknown notification: ${notification}`
@@ -34,6 +38,41 @@ module.exports = NodeHelper.create({
 		}
 	},
 
+	/**
+	 * Create a new Todoist task.
+	 */
+	async addTask(payload) {
+		try {
+			if (!payload || !payload.content) {
+				throw new Error("Task content is required.");
+			}
+
+			const content = String(payload.content).trim();
+
+			if (!content) {
+				throw new Error("Task content cannot be empty.");
+			}
+
+			const task = await this.todoistRequest("/tasks", {
+				method: "POST",
+				body: JSON.stringify({
+					content
+				})
+			});
+
+			console.log(
+				`[${this.name}] Task added: ${task.id}`
+			);
+
+			this.sendSocketNotification(
+				"TASK_ADDED",
+				task
+			);
+		} catch (error) {
+			this.handleApiError(error);
+		}
+	},
+	
 	/**
 	 * Store configuration received from the front-end.
 	 */
