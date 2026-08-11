@@ -20,7 +20,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	start() {
-		Log.info(`[${this.name}] Starting`);
+		Log.info('[${this.name}] Starting');
 
 		this.tasks = [];
 
