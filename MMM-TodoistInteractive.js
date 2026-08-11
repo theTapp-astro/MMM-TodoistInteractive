@@ -155,24 +155,6 @@ Module.register("MMM-TodoistInteractive", {
 
 		wrapper.appendChild(taskList);
 
-		/*
-		 * Last updated indicator
-		 */
-		if (this.lastUpdated) {
-			const footer = document.createElement("div");
-			footer.className = "todoist-footer";
-
-			const updatedTime = this.lastUpdated.toLocaleTimeString([], {
-				hour: "numeric",
-				minute: "2-digit"
-			});
-
-			footer.textContent =
-				'Updated ${updatedTime}';
-
-			wrapper.appendChild(footer);
-		}
-
 		return wrapper;
 	},
 
