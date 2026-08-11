@@ -6,13 +6,17 @@ Module.register("MMM-TodoistInteractive", {
 		// Refresh tasks every 60 seconds
 		updateInterval: 60000,
 
-		// Maximum number of tasks to display
+		// Maximum number of tasks displayed
 		maxTasks: 50,
 
-		// Width of the module
+		// Module width
 		width: "450px",
 
-		//View Settings
+		// Available views:
+		// "today"
+		// "today-tomorrow"
+		// "upcoming"
+		// "all"
 		view: "today",
 
 		// Display settings
@@ -26,31 +30,22 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info("[" + this.name + "] Starting");
 
 		this.tasks = [];
-
-		// Add-task state
-		this.showAddTaskDialog = false;
-		this.newTaskContent = "";
-		this.addingTask = false;
-
-		// Project / due-date state
 		this.projects = [];
-		this.selectedProjectId = "";
-		this.selectedDueDate = "";
 
-		// Task update state
-		this.updatingTasks = new Set();
-
-		// General state
 		this.loading = true;
 		this.error = null;
 		this.configReady = false;
 
-		this.updateTimer = null;
+		this.showAddTaskDialog = false;
+		this.newTaskContent = "";
+		this.addingTask = false;
 
-		this.sendSocketNotification("SET_CONFIG", {
-			todoistToken: this.config.todoistToken,
-			updateInterval: this.config.updateInterval
-		});
+		this.selectedProjectId = "";
+		this.selectedDueDate = "";
+
+		this.updatingTasks = new Set();
+
+		this.updateTimer = null;
 	},
 
 	getStyles() {
@@ -61,12 +56,11 @@ Module.register("MMM-TodoistInteractive", {
 
 	getDom() {
 		const wrapper = document.createElement("div");
-		let groups = null;
 
 		wrapper.className = "todoist-interactive";
 
 		/*
-		 * Configurable module width.
+		 * Configurable width.
 		 */
 		if (this.config.width) {
 			wrapper.style.width = this.config.width;
@@ -80,17 +74,14 @@ Module.register("MMM-TodoistInteractive", {
 
 		const title = document.createElement("div");
 		title.className = "todoist-title";
-		title.textContent = "Todoist Tasks:";
+		title.textContent = "Todoist Tasks!";
 
 		header.appendChild(title);
 
 		const addButton = document.createElement("button");
 		addButton.className = "todoist-add-button";
 		addButton.type = "button";
-		addButton.setAttribute(
-			"aria-label",
-			"Add task"
-		);
+		addButton.setAttribute("aria-label", "Add task");
 		addButton.textContent = "+";
 
 		addButton.addEventListener("click", (event) => {
@@ -111,7 +102,7 @@ Module.register("MMM-TodoistInteractive", {
 		}
 
 		/*
-		 * Loading state
+		 * Loading
 		 */
 		if (this.loading) {
 			const loading = document.createElement("div");
@@ -125,7 +116,7 @@ Module.register("MMM-TodoistInteractive", {
 		}
 
 		/*
-		 * Error state
+		 * Error
 		 */
 		if (this.error) {
 			const error = document.createElement("div");
@@ -138,29 +129,51 @@ Module.register("MMM-TodoistInteractive", {
 			return wrapper;
 		}
 
-/*
-		 * "all" uses the grouped layout.
-		 * All other views use a normal task list.
+		/*
+		 * Get tasks appropriate for the selected view.
+		 */
+		let displayTasks = this.tasks;
+
+		if (
+			this.config.view === "today-tomorrow"
+		) {
+			displayTasks = this.getTodayTomorrowTasks();
+		}
+
+		/*
+		 * Empty state
+		 */
+		if (!displayTasks.length) {
+			const empty = document.createElement("div");
+
+			empty.className = "todoist-empty";
+			empty.textContent = "No tasks";
+
+			wrapper.appendChild(empty);
+
+			return wrapper;
+		}
+
+		/*
+		 * GROUPED VIEW
+		 *
+		 * Used for:
+		 *   all
+		 *   today-tomorrow
 		 */
 		if (
 			this.config.view === "all" ||
 			this.config.view === "today-tomorrow"
 		) {
-			groups = this.groupTasks();
-
-			let remainingTasks =
-				Number(this.config.maxTasks);
-
-			if (
-				!Number.isFinite(remainingTasks) ||
-				remainingTasks <= 0
-			) {
-				remainingTasks = 50;
-			}
+			const groups =
+				this.groupTasks(displayTasks);
 
 			let sectionOrder;
-			
-			if (this.config.view === "today-tomorrow") {
+
+			if (
+				this.config.view ===
+				"today-tomorrow"
+			) {
 				sectionOrder = [
 					{
 						key: "today",
@@ -196,6 +209,16 @@ Module.register("MMM-TodoistInteractive", {
 				];
 			}
 
+			let remainingTasks =
+				Number(this.config.maxTasks);
+
+			if (
+				!Number.isFinite(remainingTasks) ||
+				remainingTasks <= 0
+			) {
+				remainingTasks = 50;
+			}
+
 			sectionOrder.forEach((section) => {
 				if (remainingTasks <= 0) {
 					return;
@@ -204,7 +227,7 @@ Module.register("MMM-TodoistInteractive", {
 				const sectionTasks =
 					groups[section.key] || [];
 
-				if (sectionTasks.length === 0) {
+				if (!sectionTasks.length) {
 					return;
 				}
 
@@ -214,6 +237,9 @@ Module.register("MMM-TodoistInteractive", {
 				sectionElement.className =
 					"todoist-section";
 
+				/*
+				 * Section title
+				 */
 				const sectionHeader =
 					document.createElement("div");
 
@@ -227,6 +253,9 @@ Module.register("MMM-TodoistInteractive", {
 					sectionHeader
 				);
 
+				/*
+				 * Section task list
+				 */
 				const taskList =
 					document.createElement("div");
 
@@ -258,8 +287,11 @@ Module.register("MMM-TodoistInteractive", {
 			});
 		} else {
 			/*
-			 * Today / today-tomorrow / upcoming
-			 * use the normal task-list layout.
+			 * NORMAL LIST VIEW
+			 *
+			 * Used for:
+			 *   today
+			 *   upcoming
 			 */
 			const taskList =
 				document.createElement("div");
@@ -267,7 +299,7 @@ Module.register("MMM-TodoistInteractive", {
 			taskList.className =
 				"todoist-task-list";
 
-			this.tasks
+			displayTasks
 				.slice(0, this.config.maxTasks)
 				.forEach((task) => {
 					taskList.appendChild(
@@ -278,124 +310,43 @@ Module.register("MMM-TodoistInteractive", {
 			wrapper.appendChild(taskList);
 		}
 
-		/*
-		 * Keep the display within maxTasks.
-		 */
-		let remainingTasks = Number(this.config.maxTasks);
+		return wrapper;
+	},
 
-		if (
-			!Number.isFinite(remainingTasks) ||
-			remainingTasks <= 0
-		) {
-			remainingTasks = 50;
-		}
+	/*
+	 * Get tasks for Today + Tomorrow.
+	 *
+	 * This uses the full task set returned by
+	 * the helper and filters it locally.
+	 */
+	getTodayTomorrowTasks() {
+		const today =
+			this.getLocalDateString(0);
 
-		/*
-		 * Section order is intentional.
-		 */
-		const sectionOrder = [
-			{
-				key: "overdue",
-				title: "Overdue"
-			},
-			{
-				key: "today",
-				title: "Due Today"
-			},
-			{
-				key: "tomorrow",
-				title: "Due Tomorrow"
-			},
-			{
-				key: "upcoming",
-				title: "Upcoming"
-			},
-			{
-				key: "noDueDate",
-				title: "No Due Date"
-			}
-		];
+		const tomorrow =
+			this.getLocalDateString(1);
 
-		sectionOrder.forEach((section) => {
-			if (remainingTasks <= 0) {
-				return;
-			}
+		return this.tasks.filter((task) => {
+			const date =
+				this.getTaskDate(task);
 
-			const sectionTasks =
-				groups[section.key] || [];
-
-			if (sectionTasks.length === 0) {
-				return;
-			}
-
-			const sectionElement =
-				document.createElement("div");
-
-			sectionElement.className =
-				"todoist-section";
-
-			/*
-			 * Section heading.
-			 */
-			const sectionHeader =
-				document.createElement("div");
-
-			sectionHeader.className =
-				"todoist-section-header";
-
-			sectionHeader.textContent =
-				section.title;
-
-			sectionElement.appendChild(
-				sectionHeader
-			);
-
-			/*
-			 * Section task list.
-			 */
-			const taskList =
-				document.createElement("div");
-
-			taskList.className =
-				"todoist-task-list";
-
-			const tasksToShow =
-				sectionTasks.slice(
-					0,
-					remainingTasks
-				);
-
-			tasksToShow.forEach((task) => {
-				taskList.appendChild(
-					this.createTaskElement(task)
-				);
-			});
-
-			remainingTasks -=
-				tasksToShow.length;
-
-			sectionElement.appendChild(
-				taskList
-			);
-
-			wrapper.appendChild(
-				sectionElement
+			return (
+				date === today ||
+				date === tomorrow
 			);
 		});
-
-		return wrapper;
 	},
 
 	/*
 	 * Group tasks into:
 	 *
 	 * Overdue
-	 * Due Today
-	 * Due Tomorrow
+	 * Today
+	 * Tomorrow
 	 * Upcoming
 	 * No Due Date
 	 */
-	groupTasks() {
+	groupTasks(tasks) {
 		const groups = {
 			overdue: [],
 			today: [],
@@ -410,31 +361,31 @@ Module.register("MMM-TodoistInteractive", {
 		const tomorrow =
 			this.getLocalDateString(1);
 
-		this.tasks.forEach((task) => {
-			const dueDate =
+		tasks.forEach((task) => {
+			const date =
 				this.getTaskDate(task);
 
-			if (!dueDate) {
+			if (!date) {
 				groups.noDueDate.push(task);
 				return;
 			}
 
-			if (dueDate < today) {
+			if (date < today) {
 				groups.overdue.push(task);
 				return;
 			}
 
-			if (dueDate === today) {
+			if (date === today) {
 				groups.today.push(task);
 				return;
 			}
 
-			if (dueDate === tomorrow) {
+			if (date === tomorrow) {
 				groups.tomorrow.push(task);
 				return;
 			}
 
-			if (dueDate > tomorrow) {
+			if (date > tomorrow) {
 				groups.upcoming.push(task);
 				return;
 			}
@@ -443,21 +394,22 @@ Module.register("MMM-TodoistInteractive", {
 		});
 
 		/*
-		 * Sort dated sections chronologically.
+		 * Oldest overdue first.
 		 */
-		groups.overdue.sort(
-			(a, b) =>
-				this.getTaskDate(a).localeCompare(
-					this.getTaskDate(b)
-				)
-		);
+		groups.overdue.sort((a, b) => {
+			return this.getTaskDate(a).localeCompare(
+				this.getTaskDate(b)
+			);
+		});
 
-		groups.upcoming.sort(
-			(a, b) =>
-				this.getTaskDate(a).localeCompare(
-					this.getTaskDate(b)
-				)
-		);
+		/*
+		 * Upcoming sorted chronologically.
+		 */
+		groups.upcoming.sort((a, b) => {
+			return this.getTaskDate(a).localeCompare(
+				this.getTaskDate(b)
+			);
+		});
 
 		return groups;
 	},
@@ -470,9 +422,6 @@ Module.register("MMM-TodoistInteractive", {
 			return null;
 		}
 
-		/*
-		 * Todoist normally supplies due.date.
-		 */
 		if (
 			typeof task.due.date === "string" &&
 			task.due.date.length >= 10
@@ -480,9 +429,6 @@ Module.register("MMM-TodoistInteractive", {
 			return task.due.date.substring(0, 10);
 		}
 
-		/*
-		 * Fall back to due.datetime.
-		 */
 		if (
 			typeof task.due.datetime === "string" &&
 			task.due.datetime.length >= 10
@@ -494,8 +440,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Return today's date or a future date as
-	 * YYYY-MM-DD using the MagicMirror's local time.
+	 * Get a local date as YYYY-MM-DD.
 	 */
 	getLocalDateString(daysFromToday) {
 		const date = new Date();
@@ -506,15 +451,16 @@ Module.register("MMM-TodoistInteractive", {
 			date.getDate() + daysFromToday
 		);
 
-		const year = date.getFullYear();
+		const year =
+			date.getFullYear();
 
-		const month = String(
-			date.getMonth() + 1
-		).padStart(2, "0");
+		const month =
+			String(date.getMonth() + 1)
+				.padStart(2, "0");
 
-		const day = String(
-			date.getDate()
-		).padStart(2, "0");
+		const day =
+			String(date.getDate())
+				.padStart(2, "0");
 
 		return (
 			year +
@@ -526,7 +472,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Open the Add Task dialog.
+	 * Open Add Task dialog.
 	 */
 	openAddTaskDialog() {
 		this.showAddTaskDialog = true;
@@ -555,7 +501,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Build Add Task dialog.
+	 * Create Add Task dialog.
 	 */
 	createAddTaskDialog() {
 		const dialog =
@@ -570,12 +516,13 @@ Module.register("MMM-TodoistInteractive", {
 		title.className =
 			"todoist-add-dialog-title";
 
-		title.textContent = "Add Task";
+		title.textContent =
+			"Add Task";
 
 		dialog.appendChild(title);
 
 		/*
-		 * Task name.
+		 * Task input
 		 */
 		const input =
 			document.createElement("input");
@@ -615,7 +562,7 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(input);
 
 		/*
-		 * Project selector.
+		 * Project
 		 */
 		const projectRow =
 			document.createElement("div");
@@ -653,33 +600,20 @@ Module.register("MMM-TodoistInteractive", {
 			inboxOption
 		);
 
-		this.projects.forEach(
-			(project) => {
-				const option =
-					document.createElement(
-						"option"
-					);
+		this.projects.forEach((project) => {
+			const option =
+				document.createElement("option");
 
-				option.value =
-					String(project.id);
+			option.value =
+				String(project.id);
 
-				option.textContent =
-					project.name;
+			option.textContent =
+				project.name;
 
-				if (
-					String(project.id) ===
-					String(
-						this.selectedProjectId
-					)
-				) {
-					option.selected = true;
-				}
-
-				projectSelect.appendChild(
-					option
-				);
-			}
-		);
+			projectSelect.appendChild(
+				option
+			);
+		});
 
 		projectSelect.value =
 			this.selectedProjectId;
@@ -699,7 +633,7 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(projectRow);
 
 		/*
-		 * Due date selector.
+		 * Due date
 		 */
 		const dueRow =
 			document.createElement("div");
@@ -716,9 +650,7 @@ Module.register("MMM-TodoistInteractive", {
 		dueLabel.textContent =
 			"Due date";
 
-		dueRow.appendChild(
-			dueLabel
-		);
+		dueRow.appendChild(dueLabel);
 
 		const dueSelect =
 			document.createElement("select");
@@ -749,31 +681,20 @@ Module.register("MMM-TodoistInteractive", {
 			}
 		];
 
-		dueOptions.forEach(
-			(dueOption) => {
-				const option =
-					document.createElement(
-						"option"
-					);
+		dueOptions.forEach((dueOption) => {
+			const option =
+				document.createElement("option");
 
-				option.value =
-					dueOption.value;
+			option.value =
+				dueOption.value;
 
-				option.textContent =
-					dueOption.label;
+			option.textContent =
+				dueOption.label;
 
-				if (
-					dueOption.value ===
-					this.selectedDueDate
-				) {
-					option.selected = true;
-				}
-
-				dueSelect.appendChild(
-					option
-				);
-			}
-		);
+			dueSelect.appendChild(
+				option
+			);
+		});
 
 		dueSelect.value =
 			this.selectedDueDate;
@@ -793,7 +714,7 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(dueRow);
 
 		/*
-		 * Buttons.
+		 * Buttons
 		 */
 		const buttons =
 			document.createElement("div");
@@ -848,9 +769,7 @@ Module.register("MMM-TodoistInteractive", {
 			}
 		);
 
-		buttons.appendChild(
-			addButton
-		);
+		buttons.appendChild(addButton);
 
 		dialog.appendChild(buttons);
 
@@ -858,7 +777,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Submit a new task.
+	 * Submit new task.
 	 */
 	submitNewTask() {
 		const content =
@@ -907,7 +826,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Create an individual task.
+	 * Create individual task.
 	 */
 	createTaskElement(task) {
 		const taskElement =
@@ -923,7 +842,7 @@ Module.register("MMM-TodoistInteractive", {
 		}
 
 		/*
-		 * Checkbox.
+		 * Checkbox
 		 */
 		const checkbox =
 			document.createElement("button");
@@ -971,7 +890,7 @@ Module.register("MMM-TodoistInteractive", {
 		);
 
 		/*
-		 * Main task content.
+		 * Task content
 		 */
 		const content =
 			document.createElement("div");
@@ -994,16 +913,10 @@ Module.register("MMM-TodoistInteractive", {
 		taskText.textContent =
 			task.content || "";
 
-		taskRow.appendChild(
-			taskText
-		);
+		taskRow.appendChild(taskText);
 
 		/*
-		 * Assignee.
-		 *
-		 * The helper may provide assigneeName,
-		 * or the task may already contain an
-		 * assignee object/name.
+		 * Assignee
 		 */
 		if (this.config.showAssignee) {
 			const assignee =
@@ -1027,12 +940,10 @@ Module.register("MMM-TodoistInteractive", {
 			}
 		}
 
-		content.appendChild(
-			taskRow
-		);
+		content.appendChild(taskRow);
 
 		/*
-		 * Metadata.
+		 * Metadata
 		 */
 		const metadata =
 			document.createElement("div");
@@ -1051,16 +962,7 @@ Module.register("MMM-TodoistInteractive", {
 				"todoist-due";
 
 			due.textContent =
-				this.getDueLabel(task);
-
-			if (
-				this.getTaskDate(task) <
-				this.getLocalDateString(0)
-			) {
-				due.classList.add(
-					"todoist-due-overdue"
-				);
-			}
+				task.due.string || "";
 
 			metadata.appendChild(due);
 		}
@@ -1078,22 +980,16 @@ Module.register("MMM-TodoistInteractive", {
 			project.textContent =
 				task.projectName;
 
-			metadata.appendChild(
-				project
-			);
+			metadata.appendChild(project);
 		}
 
 		if (
 			metadata.childNodes.length > 0
 		) {
-			content.appendChild(
-				metadata
-			);
+			content.appendChild(metadata);
 		}
 
-		taskElement.appendChild(
-			content
-		);
+		taskElement.appendChild(content);
 
 		/*
 		 * Clicking the task itself.
@@ -1109,8 +1005,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Find the assignee name from the
-	 * different forms the API/helper may use.
+	 * Find assignee name.
 	 */
 	getAssigneeName(task) {
 		if (!task) {
@@ -1150,39 +1045,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Get a friendly due-date label.
-	 */
-	getDueLabel(task) {
-		const date =
-			this.getTaskDate(task);
-
-		if (!date) {
-			return "";
-		}
-
-		const today =
-			this.getLocalDateString(0);
-
-		const tomorrow =
-			this.getLocalDateString(1);
-
-		if (date < today) {
-			return "Overdue";
-		}
-
-		if (date === today) {
-			return "Today";
-		}
-
-		if (date === tomorrow) {
-			return "Tomorrow";
-		}
-
-		return date;
-	},
-
-	/*
-	 * Complete or reopen a task.
+	 * Complete/reopen task.
 	 */
 	toggleTask(task) {
 		if (!task || !task.id) {
@@ -1198,9 +1061,7 @@ Module.register("MMM-TodoistInteractive", {
 			return;
 		}
 
-		this.updatingTasks.add(
-			taskId
-		);
+		this.updatingTasks.add(taskId);
 
 		this.updateDom(0);
 
@@ -1215,7 +1076,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Called when a task itself is clicked.
+	 * Task selected.
 	 */
 	selectTask(task) {
 		Log.info(
@@ -1232,7 +1093,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Receive messages from node_helper.js.
+	 * Receive node_helper messages.
 	 */
 	socketNotificationReceived(
 		notification,
@@ -1256,27 +1117,19 @@ Module.register("MMM-TodoistInteractive", {
 				break;
 
 			case "TASK_UPDATED":
-				this.handleTaskUpdated(
-					payload
-				);
+				this.handleTaskUpdated(payload);
 				break;
 
 			case "TASK_ADDED":
-				this.handleTaskAdded(
-					payload
-				);
+				this.handleTaskAdded(payload);
 				break;
 
 			case "PROJECTS":
-				this.handleProjects(
-					payload
-				);
+				this.handleProjects(payload);
 				break;
 
 			case "TODOIST_ERROR":
-				this.handleError(
-					payload
-				);
+				this.handleError(payload);
 				break;
 
 			default:
@@ -1285,7 +1138,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Handle successfully created task.
+	 * New task created.
 	 */
 	handleTaskAdded() {
 		this.addingTask = false;
@@ -1303,7 +1156,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Ask node_helper for all active tasks.
+	 * Request tasks.
 	 */
 	requestTasks() {
 		if (!this.configReady) {
@@ -1316,13 +1169,23 @@ Module.register("MMM-TodoistInteractive", {
 		this.updateDom();
 
 		/*
-		 * We need ALL active tasks so the front end
-		 * can build the five due-date sections.
+		 * For today-tomorrow we retrieve all active
+		 * tasks and filter them in the front end.
 		 */
+		let requestedView =
+			this.config.view;
+
+		if (
+			this.config.view ===
+			"today-tomorrow"
+		) {
+			requestedView = "all";
+		}
+
 		this.sendSocketNotification(
 			"GET_TASKS",
 			{
-				view: "all",
+				view: requestedView,
 				showCompleted:
 					this.config.showCompleted
 			}
@@ -1330,7 +1193,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Process tasks from Todoist.
+	 * Handle tasks.
 	 */
 	handleTasks(payload) {
 		this.loading = false;
@@ -1351,7 +1214,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Process completed/reopened task.
+	 * Handle updated task.
 	 */
 	handleTaskUpdated(payload) {
 		if (
@@ -1390,7 +1253,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Process projects.
+	 * Handle projects.
 	 */
 	handleProjects(payload) {
 		if (Array.isArray(payload)) {
@@ -1409,15 +1272,14 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Handle API/network errors.
+	 * Handle errors.
 	 */
 	handleError(payload) {
 		this.loading = false;
 		this.addingTask = false;
 
 		if (
-			typeof payload ===
-			"string"
+			typeof payload === "string"
 		) {
 			this.error = payload;
 		} else if (
@@ -1435,7 +1297,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Automatically refresh tasks.
+	 * Schedule automatic updates.
 	 */
 	scheduleUpdates() {
 		if (this.updateTimer) {
@@ -1454,7 +1316,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * MagicMirror lifecycle hook.
+	 * MagicMirror lifecycle.
 	 */
 	notificationReceived(
 		notification
@@ -1468,7 +1330,7 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Stop our timer.
+	 * Stop.
 	 */
 	stop() {
 		if (this.updateTimer) {
@@ -1486,4 +1348,3 @@ Module.register("MMM-TodoistInteractive", {
 		);
 	}
 });
-
