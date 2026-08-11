@@ -1107,7 +1107,9 @@ Module.register("MMM-TodoistInteractive", {
 		);
 
 		switch (notification) {
+		
 			case "CONFIG_READY":
+				Log.info("MMM-TodoistInteractive: CONFIG_READY received");
 				this.configReady = true;
 				this.requestTasks();
 				break;
@@ -1159,6 +1161,10 @@ Module.register("MMM-TodoistInteractive", {
 	 * Request tasks.
 	 */
 	requestTasks() {
+		Log.info(
+			"MMM-TodoistInteractive: requestTasks() called"
+		);
+		
 		if (!this.configReady) {
 			return;
 		}
@@ -1181,6 +1187,11 @@ Module.register("MMM-TodoistInteractive", {
 		) {
 			requestedView = "all";
 		}
+
+		Log.info(
+			"MMM-TodoistInteractive: sending GET_TASKS, view=" +
+			requestedView
+		);
 
 		this.sendSocketNotification(
 			"GET_TASKS",
