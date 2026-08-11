@@ -1,4 +1,4 @@
-'''javascript
+```javascript
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
