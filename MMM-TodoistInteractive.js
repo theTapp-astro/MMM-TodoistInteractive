@@ -1,3 +1,4 @@
+console.log("### TODOIST FRONTEND FILE LOADED ###");
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
