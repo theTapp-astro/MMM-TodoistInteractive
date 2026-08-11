@@ -61,6 +61,7 @@ Module.register("MMM-TodoistInteractive", {
 
 	getDom() {
 		const wrapper = document.createElement("div");
+		let groups = null;
 
 		wrapper.className = "todoist-interactive";
 
@@ -145,7 +146,7 @@ Module.register("MMM-TodoistInteractive", {
 			this.config.view === "all" ||
 			this.config.view === "today-tomorrow"
 		) {
-			const groups = this.groupTasks();
+			groups = this.groupTasks();
 
 			let remainingTasks =
 				Number(this.config.maxTasks);
