@@ -94,7 +94,7 @@ Clone the repository into the MagicMirror modules directory:
 ```bash
 cd ~/MagicMirror/modules
 
-git clone https://github.com/YOUR_USERNAME/TodoistInteractive.git
+git clone https://github.com/theTapp-astro/MMM-TodoistInteractive.git
 ```
 
 Enter the module directory:
