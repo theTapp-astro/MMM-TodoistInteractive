@@ -1,4 +1,3 @@
-```javascript
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
@@ -765,4 +764,3 @@ Module.register("MMM-TodoistInteractive", {
 
 	
 });
-```
