@@ -22,6 +22,9 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Starting`);
 
 		this.tasks = [];
+		this.showAddTaskDialog = false;
+		this.newTaskContent = "";
+		this.addingTask = false;
 		this.updatingTasks = new Set();
 		this.loading = true;
 		this.error = null;
@@ -62,8 +65,26 @@ Module.register("MMM-TodoistInteractive", {
 		title.textContent = "Todoist";
 
 		header.appendChild(title);
+
+		const addButton = document.createElement("button");
+		addButton.className = "todoist-add-button";
+		addButton.type = "button";
+		addButton.setAttribute("aria-label", "Add task");
+		addButton.textContent = "+";
+
+		addButton.addEventListener("click", (event) => {
+			event.stopPropagation();
+			this.openAddTaskDialog();
+		});
+
+		header.appendChild(addButton);
+
 		wrapper.appendChild(header);
 
+		if (this.showAddTaskDialog) {
+			wrapper.appendChild(this.createAddTaskDialog());
+		}
+		
 		// Loading state
 		if (this.loading) {
 			const loading = document.createElement("div");
@@ -118,6 +139,120 @@ Module.register("MMM-TodoistInteractive", {
 		}
 
 		return wrapper;
+	},
+
+	openAddTaskDialog() {
+		this.showAddTaskDialog = true;
+		this.newTaskContent = "";
+		this.addingTask = false;
+
+		this.updateDom(200);
+
+		setTimeout(() => {
+			const input = document.querySelector(
+				".todoist-add-task-input"
+			);
+
+			if (input) {
+				input.focus();
+			}
+		}, 250);
+	},
+
+		createAddTaskDialog() {
+		const dialog = document.createElement("div");
+		dialog.className = "todoist-add-dialog";
+
+		const title = document.createElement("div");
+		title.className = "todoist-add-dialog-title";
+		title.textContent = "Add Task";
+
+		dialog.appendChild(title);
+
+		const input = document.createElement("input");
+		input.className = "todoist-add-task-input";
+		input.type = "text";
+		input.placeholder = "What needs to be done?";
+		input.value = this.newTaskContent;
+
+		input.addEventListener("input", (event) => {
+			this.newTaskContent = event.target.value;
+		});
+
+		input.addEventListener("keydown", (event) => {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				this.submitNewTask();
+			}
+
+			if (event.key === "Escape") {
+				event.preventDefault();
+				this.closeAddTaskDialog();
+			}
+		});
+
+		dialog.appendChild(input);
+
+		const buttons = document.createElement("div");
+		buttons.className = "todoist-add-dialog-buttons";
+
+		const cancelButton = document.createElement("button");
+		cancelButton.className = "todoist-dialog-button todoist-cancel-button";
+		cancelButton.type = "button";
+		cancelButton.textContent = "Cancel";
+
+		cancelButton.addEventListener("click", () => {
+			this.closeAddTaskDialog();
+		});
+
+		buttons.appendChild(cancelButton);
+
+		const addButton = document.createElement("button");
+		addButton.className = "todoist-dialog-button todoist-confirm-button";
+		addButton.type = "button";
+		addButton.textContent = this.addingTask
+			? "Adding..."
+			: "Add";
+
+		addButton.disabled =
+			this.addingTask || !this.newTaskContent.trim();
+
+		addButton.addEventListener("click", () => {
+			this.submitNewTask();
+		});
+
+		buttons.appendChild(addButton);
+
+		dialog.appendChild(buttons);
+
+		return dialog;
+	},
+
+	submitNewTask() {
+		const content = this.newTaskContent.trim();
+
+		if (!content || this.addingTask) {
+			return;
+		}
+
+		this.addingTask = true;
+
+		this.updateDom(100);
+
+		this.sendSocketNotification("ADD_TASK", {
+			content
+		});
+	},
+
+	closeAddTaskDialog() {
+		if (this.addingTask) {
+			return;
+		}
+
+		this.showAddTaskDialog = false;
+		this.newTaskContent = "";
+
+		this.updateDom(200);
 	},
 
 	/*
@@ -277,10 +412,33 @@ Module.register("MMM-TodoistInteractive", {
 				this.handleError(payload);
 				break;
 
+			case "TASK_ADDED":
+				this.handleTaskAdded(payload);
+				break;
+
 			default:
 				break;
 		}
 	},
+
+	/*
+	 * handle adding new task.
+	 */
+	handleTaskAdded(payload) {
+		this.addingTask = false;
+		this.showAddTaskDialog = false;
+		this.newTaskContent = "";
+
+		this.updateDom(200);
+
+	/*
+	 * Refresh from Todoist so the new task appears
+	 * according to the current view/filter.
+	 */
+	setTimeout(() => {
+		this.requestTasks();
+	}, 300);
+},
 
 	/*
 	 * Ask node_helper.js for the current tasks.
@@ -405,6 +563,7 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Stopped`);
 	},
 
+	
 	/*
 	 * Format a timestamp for the footer.
 	 */
