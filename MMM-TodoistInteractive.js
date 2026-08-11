@@ -772,7 +772,8 @@ Module.register("MMM-TodoistInteractive", {
 			hour: "numeric",
 			minute: "2-digit"
 		});
-	}
+	},
+
 
 	/*
 	 * Stop our timer when MagicMirror shuts down
@@ -785,7 +786,7 @@ Module.register("MMM-TodoistInteractive", {
 		}
 
 		Log.info('[${this.name}] Stopped');
-	},
+	}
 
 
 
