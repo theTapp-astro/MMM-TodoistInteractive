@@ -30,6 +30,10 @@ module.exports = NodeHelper.create({
 			case "ADD_TASK":
 				this.addTask(payload);
 				break;
+
+			case "GET_PROJECTS":
+				this.getProjects();
+				break;
 				
 			default:
 				console.warn(
@@ -46,27 +50,68 @@ module.exports = NodeHelper.create({
 			if (!payload || !payload.content) {
 				throw new Error("Task content is required.");
 			}
-
+	
 			const content = String(payload.content).trim();
-
+	
 			if (!content) {
-				throw new Error("Task content cannot be empty.");
+				throw new Error(
+					"Task content cannot be empty."
+				);
 			}
-
-			const task = await this.todoistRequest("/tasks", {
-				method: "POST",
-				body: JSON.stringify({
-					content
-				})
-			});
-
+	
+			const taskData = {
+				content
+			};
+	
+			/*
+			 * Project
+			 */
+	
+			if (payload.projectId) {
+				taskData.project_id =
+					String(payload.projectId);
+			}
+	
+			/*
+			 * Due date
+			 */
+	
+			if (payload.dueString) {
+				taskData.due_string =
+					String(payload.dueString);
+			}
+	
+			const task = await this.todoistRequest(
+				"/tasks",
+				{
+					method: "POST",
+					body: JSON.stringify(taskData)
+				}
+			);
+	
 			console.log(
 				`[${this.name}] Task added: ${task.id}`
 			);
-
+	
 			this.sendSocketNotification(
 				"TASK_ADDED",
 				task
+			);
+		} catch (error) {
+			this.handleApiError(error);
+		}
+	},
+
+	/**
+	 * Get Todoist projects for the Add Task dialog.
+	 */
+	async getProjects() {
+		try {
+			const projects = await this.getAllProjects();
+	
+			this.sendSocketNotification(
+				"PROJECTS",
+				projects
 			);
 		} catch (error) {
 			this.handleApiError(error);
