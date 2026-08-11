@@ -1,4 +1,3 @@
-console.log("### TODOIST FRONTEND FILE LOADED ###");
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
@@ -28,27 +27,43 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	start() {
-		Log.info("[" + this.name + "] Starting");
+	Log.info(
+		"[" + this.name + "] Starting"
+	);
 
-		this.tasks = [];
-		this.projects = [];
+	this.tasks = [];
+	this.projects = [];
 
-		this.loading = true;
-		this.error = null;
-		this.configReady = false;
+	this.loading = true;
+	this.error = null;
+	this.configReady = false;
 
-		this.showAddTaskDialog = false;
-		this.newTaskContent = "";
-		this.addingTask = false;
+	this.showAddTaskDialog = false;
+	this.newTaskContent = "";
+	this.addingTask = false;
 
-		this.selectedProjectId = "";
-		this.selectedDueDate = "";
+	this.selectedProjectId = "";
+	this.selectedDueDate = "";
 
-		this.updatingTasks = new Set();
+	this.updatingTasks = new Set();
 
-		this.updateTimer = null;
-	},
+	this.updateTimer = null;
 
+	/*
+	 * Send the Todoist configuration to
+	 * node_helper.js.
+	 */
+	this.sendSocketNotification(
+		"SET_CONFIG",
+		{
+			todoistToken:
+				this.config.todoistToken,
+
+			updateInterval:
+				this.config.updateInterval
+		}
+	);
+},
 	getStyles() {
 		return [
 			this.file("css/TodoistInteractive.css")
