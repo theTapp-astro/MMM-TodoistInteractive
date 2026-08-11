@@ -88,10 +88,10 @@
  */
 
 .todoist-checkbox {
-	flex: 0 0 36px;
+	flex: 0 0 26px;
 
-	width: 36px;
-	height: 36px;
+	width: 26px;
+	height: 26px;
 
 	margin: 0 10px 0 0;
 	padding: 0;
@@ -103,8 +103,8 @@
 	color: #ffffff;
 
 	font-family: inherit;
-	font-size: 20px;
-	line-height: 30px;
+	font-size: 16px;
+	line-height: 22px;
 
 	cursor: pointer;
 
@@ -238,11 +238,11 @@
 	}
 
 	.todoist-checkbox {
-		flex-basis: 42px;
-		width: 42px;
-		height: 42px;
+		flex-basis: 26px;
+		width: 26px;
+		height: 26px;
 
-		font-size: 22px;
+		font-size: 16px;
 	}
 }
 
