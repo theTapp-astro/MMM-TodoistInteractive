@@ -1,4 +1,4 @@
-```javascript
+'''javascript
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
@@ -163,7 +163,7 @@ Module.register("MMM-TodoistInteractive", {
 			footer.className = "todoist-footer";
 
 			footer.textContent =
-				`Updated ${this.formatTime(this.lastUpdated)}`;
+				'Updated ${this.formatTime(this.lastUpdated)}';
 
 			wrapper.appendChild(footer);
 		}
@@ -553,7 +553,7 @@ Module.register("MMM-TodoistInteractive", {
 	 */
 	selectTask(task) {
 		Log.info(
-			`[${this.name}] Task selected: ${task.id}`
+			'[${this.name}] Task selected: ${task.id}'
 		);
 
 		this.sendNotification(
@@ -567,7 +567,7 @@ Module.register("MMM-TodoistInteractive", {
 	 */
 	socketNotificationReceived(notification, payload) {
 		Log.info(
-			`[${this.name}] Socket notification: ${notification}`
+			'[${this.name}] Socket notification: ${notification}'
 		);
 
 		switch (notification) {
@@ -770,7 +770,7 @@ Module.register("MMM-TodoistInteractive", {
 			this.updateTimer = null;
 		}
 
-		Log.info(`[${this.name}] Stopped`);
+		Log.info('[${this.name}] Stopped');
 	},
 
 	/*
@@ -787,4 +787,4 @@ Module.register("MMM-TodoistInteractive", {
 		});
 	}
 });
-```
+'''
