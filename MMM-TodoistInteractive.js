@@ -1,4 +1,4 @@
-Module.register("TodoistInteractive", {
+Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
 		todoistToken: "",
