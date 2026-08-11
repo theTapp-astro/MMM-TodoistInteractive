@@ -14,13 +14,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/theTapp-astro/TodoistInteractive.git"
+    "url": "https://github.com/theTapp-astro/MMM-TodoistInteractive.git"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {},
   "scripts": {
-    "test": "node --check node_helper.js && node --check TodoistInteractive.js"
+    "test": "node --check node_helper.js && node --check MMM-TodoistInteractive.js"
   }
 }
