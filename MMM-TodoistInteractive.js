@@ -13,6 +13,9 @@ Module.register("MMM-TodoistInteractive", {
 		// Width of the module
 		width: "450px",
 
+		//View Settings
+		view: "today",
+
 		// Display settings
 		showCompleted: false,
 		showDueDate: true,
@@ -77,7 +80,7 @@ Module.register("MMM-TodoistInteractive", {
 
 		const title = document.createElement("div");
 		title.className = "todoist-title";
-		title.textContent = "Todoist Tasks!";
+		title.textContent = "Todoist Tasks:";
 
 		header.appendChild(title);
 
@@ -135,29 +138,144 @@ Module.register("MMM-TodoistInteractive", {
 			return wrapper;
 		}
 
-		/*
-		 * Group tasks by due date.
+/*
+		 * "all" uses the grouped layout.
+		 * All other views use a normal task list.
 		 */
-		const groups = this.groupTasks();
+		if (
+			this.config.view === "all" ||
+			this.config.view === "today-tomorrow"
+		) {
+			const groups = this.groupTasks();
 
-		let totalTasks = 0;
+			let remainingTasks =
+				Number(this.config.maxTasks);
 
-		Object.keys(groups).forEach((groupName) => {
-			totalTasks += groups[groupName].length;
-		});
+			if (
+				!Number.isFinite(remainingTasks) ||
+				remainingTasks <= 0
+			) {
+				remainingTasks = 50;
+			}
 
-		/*
-		 * Empty state.
-		 */
-		if (totalTasks === 0) {
-			const empty = document.createElement("div");
+			let sectionOrder;
+			
+			if (this.config.view === "today-tomorrow") {
+				sectionOrder = [
+					{
+						key: "today",
+						title: "Due Today"
+					},
+					{
+						key: "tomorrow",
+						title: "Due Tomorrow"
+					}
+				];
+			} else {
+				sectionOrder = [
+					{
+						key: "overdue",
+						title: "Overdue"
+					},
+					{
+						key: "today",
+						title: "Due Today"
+					},
+					{
+						key: "tomorrow",
+						title: "Due Tomorrow"
+					},
+					{
+						key: "upcoming",
+						title: "Upcoming"
+					},
+					{
+						key: "noDueDate",
+						title: "No Due Date"
+					}
+				];
+			}
 
-			empty.className = "todoist-empty";
-			empty.textContent = "No tasks";
+			sectionOrder.forEach((section) => {
+				if (remainingTasks <= 0) {
+					return;
+				}
 
-			wrapper.appendChild(empty);
+				const sectionTasks =
+					groups[section.key] || [];
 
-			return wrapper;
+				if (sectionTasks.length === 0) {
+					return;
+				}
+
+				const sectionElement =
+					document.createElement("div");
+
+				sectionElement.className =
+					"todoist-section";
+
+				const sectionHeader =
+					document.createElement("div");
+
+				sectionHeader.className =
+					"todoist-section-header";
+
+				sectionHeader.textContent =
+					section.title;
+
+				sectionElement.appendChild(
+					sectionHeader
+				);
+
+				const taskList =
+					document.createElement("div");
+
+				taskList.className =
+					"todoist-task-list";
+
+				const tasksToShow =
+					sectionTasks.slice(
+						0,
+						remainingTasks
+					);
+
+				tasksToShow.forEach((task) => {
+					taskList.appendChild(
+						this.createTaskElement(task)
+					);
+				});
+
+				remainingTasks -=
+					tasksToShow.length;
+
+				sectionElement.appendChild(
+					taskList
+				);
+
+				wrapper.appendChild(
+					sectionElement
+				);
+			});
+		} else {
+			/*
+			 * Today / today-tomorrow / upcoming
+			 * use the normal task-list layout.
+			 */
+			const taskList =
+				document.createElement("div");
+
+			taskList.className =
+				"todoist-task-list";
+
+			this.tasks
+				.slice(0, this.config.maxTasks)
+				.forEach((task) => {
+					taskList.appendChild(
+						this.createTaskElement(task)
+					);
+				});
+
+			wrapper.appendChild(taskList);
 		}
 
 		/*
