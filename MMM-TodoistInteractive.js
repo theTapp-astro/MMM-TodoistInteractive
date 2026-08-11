@@ -761,19 +761,6 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
-	 * Stop our timer when MagicMirror shuts down
-	 * or the module is removed.
-	 */
-	stop() {
-		if (this.updateTimer) {
-			clearInterval(this.updateTimer);
-			this.updateTimer = null;
-		}
-
-		Log.info('[${this.name}] Stopped');
-	},
-
-	/*
 	 * Format a timestamp for the footer.
 	 */
 	formatTime(date) {
@@ -786,5 +773,22 @@ Module.register("MMM-TodoistInteractive", {
 			minute: "2-digit"
 		});
 	}
+
+	/*
+	 * Stop our timer when MagicMirror shuts down
+	 * or the module is removed.
+	 */
+	stop() {
+		if (this.updateTimer) {
+			clearInterval(this.updateTimer);
+			this.updateTimer = null;
+		}
+
+		Log.info('[${this.name}] Stopped');
+	},
+
+
+
+	
 });
 ```
