@@ -787,4 +787,4 @@ Module.register("MMM-TodoistInteractive", {
 		});
 	}
 });
-'''
+```
