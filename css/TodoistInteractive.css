@@ -289,3 +289,12 @@
 	-moz-user-select: none;
 	user-select: none;
 }
+
+.todoist-checkbox.updating {
+	opacity: 0.5;
+	cursor: wait;
+}
+
+.todoist-checkbox:disabled {
+	pointer-events: none;
+}
