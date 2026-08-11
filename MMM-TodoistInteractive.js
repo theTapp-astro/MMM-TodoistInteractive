@@ -554,15 +554,15 @@ Module.register("MMM-TodoistInteractive", {
 	 */
 	socketNotificationReceived(notification, payload) {
 		Log.info(
-			'[${this.name}] Socket notification: ${notification}'
+			"[" + this.name + "] Socket notification: " + notification
 		);
-
+	
 		switch (notification) {
 			case "CONFIG_READY":
 				this.configReady = true;
 				this.requestTasks();
 				break;
-
+			
 			case "TASKS":
 				this.handleTasks(payload);
 				break;
