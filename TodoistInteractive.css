@@ -1,0 +1,291 @@
+/*
+ * TodoistInteractive
+ * MagicMirror² Todoist module
+ */
+
+.todoist-interactive {
+	width: 100%;
+	min-width: 300px;
+	color: #ffffff;
+	font-family: inherit;
+}
+
+/*
+ * Header
+ */
+
+.todoist-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+}
+
+.todoist-title {
+	font-size: 24px;
+	font-weight: 500;
+	color: #ffffff;
+}
+
+/*
+ * Status messages
+ */
+
+.todoist-status,
+.todoist-empty {
+	font-size: 18px;
+	color: #aaa;
+	padding: 8px 0;
+}
+
+.todoist-error {
+	color: #ff6b6b;
+	font-size: 16px;
+	padding: 8px 0;
+}
+
+/*
+ * Task list
+ */
+
+.todoist-task-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/*
+ * Individual task
+ *
+ * The entire row is intentionally large enough
+ * to be comfortable on a touchscreen.
+ */
+
+.todoist-task {
+	display: flex;
+	align-items: flex-start;
+	width: 100%;
+	min-height: 52px;
+	padding: 8px 4px;
+
+	box-sizing: border-box;
+
+	border-radius: 6px;
+
+	transition:
+		background-color 0.15s ease,
+		opacity 0.15s ease;
+
+	cursor: pointer;
+}
+
+.todoist-task:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+/*
+ * Checkbox
+ */
+
+.todoist-checkbox {
+	flex: 0 0 36px;
+
+	width: 36px;
+	height: 36px;
+
+	margin: 0 10px 0 0;
+	padding: 0;
+
+	border: 2px solid #aaa;
+	border-radius: 50%;
+
+	background: transparent;
+	color: #ffffff;
+
+	font-family: inherit;
+	font-size: 20px;
+	line-height: 30px;
+
+	cursor: pointer;
+
+	-webkit-tap-highlight-color: transparent;
+
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		transform 0.1s ease;
+}
+
+.todoist-checkbox:hover {
+	border-color: #ffffff;
+}
+
+.todoist-checkbox:active {
+	transform: scale(0.9);
+}
+
+/*
+ * Completed checkbox
+ */
+
+.todoist-task.completed .todoist-checkbox {
+	border-color: #808080;
+	background-color: #808080;
+	color: #ffffff;
+}
+
+/*
+ * Task content
+ */
+
+.todoist-task-content {
+	flex: 1;
+	min-width: 0;
+	padding-top: 2px;
+}
+
+/*
+ * Task name
+ */
+
+.todoist-task-text {
+	font-size: 20px;
+	line-height: 1.25;
+
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+/*
+ * Completed task
+ */
+
+.todoist-task.completed {
+	opacity: 0.55;
+}
+
+.todoist-task.completed .todoist-task-text {
+	text-decoration: line-through;
+	color: #aaa;
+}
+
+/*
+ * Task metadata
+ */
+
+.todoist-task-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+
+	gap: 8px;
+
+	margin-top: 4px;
+
+	font-size: 14px;
+	line-height: 1.2;
+	color: #999;
+}
+
+/*
+ * Due date
+ */
+
+.todoist-due {
+	color: #aaa;
+}
+
+/*
+ * Project name
+ */
+
+.todoist-project {
+	color: #888;
+}
+
+/*
+ * Separate metadata items visually
+ */
+
+.todoist-project::before {
+	content: "•";
+	margin-right: 8px;
+	color: #666;
+}
+
+/*
+ * Footer
+ */
+
+.todoist-footer {
+	margin-top: 8px;
+
+	font-size: 12px;
+	color: #666;
+
+	text-align: right;
+}
+
+/*
+ * Touch devices
+ */
+
+@media (pointer: coarse) {
+	.todoist-task {
+		min-height: 60px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+
+	.todoist-checkbox {
+		flex-basis: 42px;
+		width: 42px;
+		height: 42px;
+
+		font-size: 22px;
+	}
+}
+
+/*
+ * Smaller screens
+ */
+
+@media screen and (max-width: 600px) {
+	.todoist-interactive {
+		min-width: 250px;
+	}
+
+	.todoist-title {
+		font-size: 21px;
+	}
+
+	.todoist-task-text {
+		font-size: 18px;
+	}
+
+	.todoist-task-meta {
+		font-size: 13px;
+	}
+}
+
+/*
+ * Accessibility / keyboard focus
+ */
+
+.todoist-checkbox:focus-visible,
+.todoist-task:focus-visible {
+	outline: 2px solid #ffffff;
+	outline-offset: 2px;
+}
+
+/*
+ * Prevent accidental text selection while interacting
+ * with the mirror.
+ */
+
+.todoist-task,
+.todoist-checkbox {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
