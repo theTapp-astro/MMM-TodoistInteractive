@@ -463,3 +463,53 @@
 		padding-right: 18px;
 	}
 }
+
+/*
+ * Add-task fields
+ */
+
+.todoist-add-field {
+	display: flex;
+	align-items: center;
+
+	margin-top: 10px;
+
+	gap: 10px;
+}
+
+.todoist-add-label {
+	flex: 0 0 75px;
+
+	font-size: 16px;
+	color: #aaa;
+}
+
+.todoist-add-select {
+	flex: 1;
+
+	height: 42px;
+
+	padding: 6px 10px;
+
+	border: 1px solid #777;
+	border-radius: 5px;
+
+	background: #111;
+	color: #fff;
+
+	font-family: inherit;
+	font-size: 17px;
+
+	outline: none;
+}
+
+.todoist-add-select:focus {
+	border-color: #fff;
+}
+
+@media (pointer: coarse) {
+	.todoist-add-select {
+		height: 48px;
+		font-size: 19px;
+	}
+}
