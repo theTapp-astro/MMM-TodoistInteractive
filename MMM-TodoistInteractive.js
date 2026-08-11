@@ -517,38 +517,38 @@ Module.register("MMM-TodoistInteractive", {
 		if (!task || !task.id) {
 			return;
 		}
-
+	
 		const taskId = String(task.id);
-
+	
 		// Prevent accidental double-taps.
 		if (this.updatingTasks.has(taskId)) {
 			return;
 		}
-
+	
 		this.updatingTasks.add(taskId);
-
+	
 		this.updateDom(0);
-
+	
 		this.sendSocketNotification("TOGGLE_TASK", {
-			taskId,
+			taskId: taskId,
 			completed: !task.completed
 		});
 	},
-
+	
 	/*
 	 * Called when a task itself is clicked.
 	 */
 	selectTask(task) {
 		Log.info(
-			'[${this.name}] Task selected: ${task.id}'
+			"[" + this.name + "] Task selected: " + task.id
 		);
-
+	
 		this.sendNotification(
 			"TODOIST_TASK_SELECTED",
 			task
 		);
 	},
-
+	
 	/*
 	 * Receive messages from node_helper.js.
 	 */
