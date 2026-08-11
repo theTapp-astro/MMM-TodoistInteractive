@@ -1,3 +1,4 @@
+```javascript
 Module.register("MMM-TodoistInteractive", {
 	defaults: {
 		// Todoist
@@ -22,16 +23,20 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Starting`);
 
 		this.tasks = [];
-		
+
+		// Add-task state
 		this.showAddTaskDialog = false;
 		this.newTaskContent = "";
 		this.addingTask = false;
 
+		// Project/due-date state
 		this.projects = [];
 		this.selectedProjectId = "";
 		this.selectedDueDate = "";
-		
+
+		// Task update state
 		this.updatingTasks = new Set();
+
 		this.loading = true;
 		this.error = null;
 		this.lastUpdated = null;
@@ -62,7 +67,9 @@ Module.register("MMM-TodoistInteractive", {
 		const wrapper = document.createElement("div");
 		wrapper.className = "todoist-interactive";
 
-		// Header
+		/*
+		 * Header
+		 */
 		const header = document.createElement("div");
 		header.className = "todoist-header";
 
@@ -84,56 +91,73 @@ Module.register("MMM-TodoistInteractive", {
 		});
 
 		header.appendChild(addButton);
-
 		wrapper.appendChild(header);
 
+		/*
+		 * Add-task dialog
+		 */
 		if (this.showAddTaskDialog) {
 			wrapper.appendChild(this.createAddTaskDialog());
 		}
-		
-		// Loading state
+
+		/*
+		 * Loading state
+		 */
 		if (this.loading) {
 			const loading = document.createElement("div");
 			loading.className = "todoist-status";
 			loading.textContent = "Loading...";
+
 			wrapper.appendChild(loading);
 
 			return wrapper;
 		}
 
-		// Error state
+		/*
+		 * Error state
+		 */
 		if (this.error) {
 			const error = document.createElement("div");
 			error.className = "todoist-error";
 			error.textContent = this.error;
+
 			wrapper.appendChild(error);
 
 			return wrapper;
 		}
 
-		// Empty state
+		/*
+		 * Empty state
+		 */
 		if (!this.tasks.length) {
 			const empty = document.createElement("div");
 			empty.className = "todoist-empty";
 			empty.textContent = "No tasks";
+
 			wrapper.appendChild(empty);
 
 			return wrapper;
 		}
 
-		// Task list
+		/*
+		 * Task list
+		 */
 		const taskList = document.createElement("div");
 		taskList.className = "todoist-task-list";
 
 		this.tasks
 			.slice(0, this.config.maxTasks)
 			.forEach((task) => {
-				taskList.appendChild(this.createTaskElement(task));
+				taskList.appendChild(
+					this.createTaskElement(task)
+				);
 			});
 
 		wrapper.appendChild(taskList);
 
-		// Last updated indicator
+		/*
+		 * Last updated indicator
+		 */
 		if (this.lastUpdated) {
 			const footer = document.createElement("div");
 			footer.className = "todoist-footer";
@@ -147,13 +171,18 @@ Module.register("MMM-TodoistInteractive", {
 		return wrapper;
 	},
 
+	/*
+	 * Open the Add Task dialog.
+	 */
 	openAddTaskDialog() {
 		this.showAddTaskDialog = true;
 		this.newTaskContent = "";
 		this.addingTask = false;
+
 		this.selectedProjectId = "";
 		this.selectedDueDate = "";
 
+		// Get the current Todoist project list.
 		this.sendSocketNotification("GET_PROJECTS");
 
 		this.updateDom(200);
@@ -169,6 +198,9 @@ Module.register("MMM-TodoistInteractive", {
 		}, 250);
 	},
 
+	/*
+	 * Build the Add Task dialog.
+	 */
 	createAddTaskDialog() {
 		const dialog = document.createElement("div");
 		dialog.className = "todoist-add-dialog";
@@ -182,7 +214,6 @@ Module.register("MMM-TodoistInteractive", {
 		/*
 		 * Task name
 		 */
-
 		const input = document.createElement("input");
 		input.className = "todoist-add-task-input";
 		input.type = "text";
@@ -208,9 +239,8 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(input);
 
 		/*
-		 * Project
+		 * Project selector
 		 */
-
 		const projectRow = document.createElement("div");
 		projectRow.className = "todoist-add-field";
 
@@ -255,9 +285,8 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(projectRow);
 
 		/*
-		 * Due date
+		 * Due date selector
 		 */
-
 		const dueRow = document.createElement("div");
 		dueRow.className = "todoist-add-field";
 
@@ -319,9 +348,8 @@ Module.register("MMM-TodoistInteractive", {
 		dialog.appendChild(dueRow);
 
 		/*
-		 * Buttons
+		 * Dialog buttons
 		 */
-
 		const buttons = document.createElement("div");
 		buttons.className = "todoist-add-dialog-buttons";
 
@@ -341,6 +369,7 @@ Module.register("MMM-TodoistInteractive", {
 		addButton.className =
 			"todoist-dialog-button todoist-confirm-button";
 		addButton.type = "button";
+
 		addButton.textContent = this.addingTask
 			? "Adding..."
 			: "Add";
@@ -354,30 +383,35 @@ Module.register("MMM-TodoistInteractive", {
 		});
 
 		buttons.appendChild(addButton);
-
 		dialog.appendChild(buttons);
 
 		return dialog;
 	},
 
+	/*
+	 * Submit a new task to Todoist.
+	 */
 	submitNewTask() {
 		const content = this.newTaskContent.trim();
-	
+
 		if (!content || this.addingTask) {
 			return;
 		}
-	
+
 		this.addingTask = true;
-	
+
 		this.updateDom(100);
-	
+
 		this.sendSocketNotification("ADD_TASK", {
 			content,
 			projectId: this.selectedProjectId || null,
 			dueString: this.selectedDueDate || null
 		});
 	},
-	
+
+	/*
+	 * Close the Add Task dialog.
+	 */
 	closeAddTaskDialog() {
 		if (this.addingTask) {
 			return;
@@ -385,7 +419,9 @@ Module.register("MMM-TodoistInteractive", {
 
 		this.showAddTaskDialog = false;
 		this.newTaskContent = "";
-	
+		this.selectedProjectId = "";
+		this.selectedDueDate = "";
+
 		this.updateDom(200);
 	},
 
@@ -397,15 +433,17 @@ Module.register("MMM-TodoistInteractive", {
 		taskElement.className = "todoist-task";
 
 		if (task.completed) {
-		taskElement.classList.add("completed");
+			taskElement.classList.add("completed");
 		}
-	
+
 		/*
 		 * Checkbox
 		 */
 		const checkbox = document.createElement("button");
+
 		checkbox.className = "todoist-checkbox";
 		checkbox.type = "button";
+
 		checkbox.setAttribute(
 			"aria-label",
 			task.completed
@@ -413,7 +451,9 @@ Module.register("MMM-TodoistInteractive", {
 				: "Complete task"
 		);
 
-		checkbox.textContent = task.completed ? "✓" : "";
+		checkbox.textContent =
+			task.completed ? "✓" : "";
+
 		if (this.updatingTasks.has(String(task.id))) {
 			checkbox.classList.add("updating");
 			checkbox.disabled = true;
@@ -440,21 +480,26 @@ Module.register("MMM-TodoistInteractive", {
 		content.appendChild(contentTop);
 
 		/*
-		 * Metadata
+		 * Task metadata
 		 */
 		const metadata = document.createElement("div");
 		metadata.className = "todoist-task-meta";
 
 		if (this.config.showDueDate && task.due) {
 			const due = document.createElement("span");
+
 			due.className = "todoist-due";
 			due.textContent = task.due.string || "";
 
 			metadata.appendChild(due);
 		}
 
-		if (this.config.showProject && task.projectName) {
+		if (
+			this.config.showProject &&
+			task.projectName
+		) {
 			const project = document.createElement("span");
+
 			project.className = "todoist-project";
 			project.textContent = task.projectName;
 
@@ -488,7 +533,7 @@ Module.register("MMM-TodoistInteractive", {
 
 		const taskId = String(task.id);
 
-		// Prevent accidental double-taps while the request is pending.
+		// Prevent accidental double-taps.
 		if (this.updatingTasks.has(taskId)) {
 			return;
 		}
@@ -498,26 +543,23 @@ Module.register("MMM-TodoistInteractive", {
 		this.updateDom(0);
 
 		this.sendSocketNotification("TOGGLE_TASK", {
-			taskId: taskId,
+			taskId,
 			completed: !task.completed
 		});
 	},
 
 	/*
 	 * Called when a task itself is clicked.
-	 *
-	 * We'll expand this later to support:
-	 * - editing
-	 * - deleting
-	 * - changing priority
-	 * - changing due date
 	 */
 	selectTask(task) {
 		Log.info(
 			`[${this.name}] Task selected: ${task.id}`
 		);
 
-		this.sendNotification("TODOIST_TASK_SELECTED", task);
+		this.sendNotification(
+			"TODOIST_TASK_SELECTED",
+			task
+		);
 	},
 
 	/*
@@ -542,10 +584,6 @@ Module.register("MMM-TodoistInteractive", {
 				this.handleTaskUpdated(payload);
 				break;
 
-			case "TODOIST_ERROR":
-				this.handleError(payload);
-				break;
-
 			case "TASK_ADDED":
 				this.handleTaskAdded(payload);
 				break;
@@ -554,32 +592,36 @@ Module.register("MMM-TodoistInteractive", {
 				this.handleProjects(payload);
 				break;
 
+			case "TODOIST_ERROR":
+				this.handleError(payload);
+				break;
+
 			default:
 				break;
 		}
 	},
 
 	/*
-	 * handle adding new task.
+	 * Handle a successfully created task.
 	 */
-	handleTaskAdded(payload) {
+	handleTaskAdded() {
 		this.addingTask = false;
 		this.showAddTaskDialog = false;
-		
+
 		this.newTaskContent = "";
 		this.selectedProjectId = "";
 		this.selectedDueDate = "";
 
 		this.updateDom(200);
 
-	/*
-	 * Refresh from Todoist so the new task appears
-	 * according to the current view/filter.
-	 */
-	setTimeout(() => {
-		this.requestTasks();
-	}, 300);
-},
+		/*
+		 * Refresh from Todoist so the new task appears
+		 * according to the current view/filter.
+		 */
+		setTimeout(() => {
+			this.requestTasks();
+		}, 300);
+	},
 
 	/*
 	 * Ask node_helper.js for the current tasks.
@@ -609,13 +651,16 @@ Module.register("MMM-TodoistInteractive", {
 
 		if (Array.isArray(payload)) {
 			this.tasks = payload;
-		} else if (payload && Array.isArray(payload.tasks)) {
+		} else if (
+			payload &&
+			Array.isArray(payload.tasks)
+		) {
 			this.tasks = payload.tasks;
 		} else {
 			this.tasks = [];
 		}
 
-		this.lastUpdated = new Date(Date.now());
+		this.lastUpdated = new Date();
 
 		this.updateDom(300);
 	},
@@ -638,13 +683,14 @@ Module.register("MMM-TodoistInteractive", {
 		);
 
 		if (task) {
-			task.completed = Boolean(payload.completed);
+			task.completed =
+				Boolean(payload.completed);
 		}
 
 		this.updateDom(200);
 
 		/*
-		 * Refresh from Todoist after the mutation so the
+		 * Refresh from Todoist after the mutation so
 		 * local state stays synchronized with the server.
 		 */
 		setTimeout(() => {
@@ -653,17 +699,40 @@ Module.register("MMM-TodoistInteractive", {
 	},
 
 	/*
+	 * Process projects received from Todoist.
+	 */
+	handleProjects(payload) {
+		if (Array.isArray(payload)) {
+			this.projects = payload;
+		} else if (
+			payload &&
+			Array.isArray(payload.projects)
+		) {
+			this.projects = payload.projects;
+		} else {
+			this.projects = [];
+		}
+
+		this.updateDom(100);
+	},
+
+	/*
 	 * Display an API/network error.
 	 */
 	handleError(payload) {
 		this.loading = false;
+		this.addingTask = false;
 
 		if (typeof payload === "string") {
 			this.error = payload;
-		} else if (payload && payload.message) {
+		} else if (
+			payload &&
+			payload.message
+		) {
 			this.error = payload.message;
 		} else {
-			this.error = "Unable to connect to Todoist";
+			this.error =
+				"Unable to connect to Todoist";
 		}
 
 		this.updateDom();
@@ -704,19 +773,6 @@ Module.register("MMM-TodoistInteractive", {
 		Log.info(`[${this.name}] Stopped`);
 	},
 
-
-	handleProjects(payload) {
-		if (Array.isArray(payload)) {
-			this.projects = payload;
-		} else if (payload && Array.isArray(payload.projects)) {
-			this.projects = payload.projects;
-		} else {
-			this.projects = [];
-		}
-
-		this.updateDom(100);
-	},
-	f
 	/*
 	 * Format a timestamp for the footer.
 	 */
@@ -731,3 +787,4 @@ Module.register("MMM-TodoistInteractive", {
 		});
 	}
 });
+```
