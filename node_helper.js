@@ -270,13 +270,6 @@ module.exports = NodeHelper.create({
 					projectMap.get(String(task.project_id)) ||
 					"";
 			
-				Log.info(
-					"[MMM-TodoistInteractive] Task: " +
-					task.content +
-					" | assignee_id: " +
-					task.assignee_id
-				);
-			
 				return {
 					...task,
 					projectName
