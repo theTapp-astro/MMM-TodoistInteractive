@@ -38,6 +38,7 @@ Module.register("MMM-TodoistInteractive", {
 	this.projects = [];
 
 	this.listFilter = this.config.list || "all";
+	this.assigneeFilter = "all";
 
 	this.loading = true;
 	this.error = null;
@@ -205,6 +206,153 @@ Module.register("MMM-TodoistInteractive", {
 		
 		headerLeft.appendChild(
 			listFilter
+		);
+
+		/*
+		 * Assignee filter
+		 */
+		const assigneeFilter =
+			document.createElement("select");
+		
+		assigneeFilter.className =
+			"todoist-assignee-filter";
+		
+		/*
+		 * All people option
+		 */
+		const allPeopleOption =
+			document.createElement("option");
+		
+		allPeopleOption.value = "all";
+		allPeopleOption.textContent =
+			"All People";
+		
+		assigneeFilter.appendChild(
+			allPeopleOption
+		);
+		
+		/*
+		 * Build a unique list of assignees
+		 * from the tasks currently available.
+		 */
+		const assignees = [];
+		
+		this.tasks.forEach((task) => {
+			if (!task) {
+				return;
+			}
+		
+			let assigneeId = null;
+			let assigneeName = null;
+		
+			if (
+				task.assignee_id !== undefined &&
+				task.assignee_id !== null
+			) {
+				assigneeId =
+					String(task.assignee_id);
+			}
+		
+			if (
+				task.responsible_uid !== undefined &&
+				task.responsible_uid !== null
+			) {
+				assigneeId =
+					String(task.responsible_uid);
+			}
+		
+			/*
+			 * Support several possible enriched
+			 * assignee name properties.
+			 */
+			if (task.assignee_name) {
+				assigneeName =
+					task.assignee_name;
+			} else if (
+				task.assigneeName
+			) {
+				assigneeName =
+					task.assigneeName;
+			} else if (
+				task.assignee &&
+				typeof task.assignee === "object"
+			) {
+				assigneeName =
+					task.assignee.name;
+			} else if (
+				typeof task.assignee === "string"
+			) {
+				assigneeName =
+					task.assignee;
+			}
+		
+			if (
+				assigneeId &&
+				assigneeName
+			) {
+				const alreadyExists =
+					assignees.some(
+						(person) =>
+							String(person.id) ===
+							String(assigneeId)
+					);
+		
+				if (!alreadyExists) {
+					assignees.push({
+						id: assigneeId,
+						name: assigneeName
+					});
+				}
+			}
+		});
+		
+		/*
+		 * Sort alphabetically.
+		 */
+		assignees.sort(
+			(a, b) =>
+				a.name.localeCompare(b.name)
+		);
+		
+		/*
+		 * Add people to dropdown.
+		 */
+		assignees.forEach((person) => {
+			const option =
+				document.createElement("option");
+		
+			option.value =
+				String(person.id);
+		
+			option.textContent =
+				person.name;
+		
+			assigneeFilter.appendChild(
+				option
+			);
+		});
+		
+		/*
+		 * Restore current selection.
+		 */
+		assigneeFilter.value =
+			this.assigneeFilter || "all";
+		
+		/*
+		 * Change assignee filter.
+		 */
+		assigneeFilter.addEventListener(
+			"change",
+			(event) => {
+				this.assigneeFilter =
+					event.target.value;
+		
+				this.updateDom(100);
+			}
+		);
+		
+		headerLeft.appendChild(
+			assigneeFilter
 		);
 		
 		header.appendChild(
@@ -492,61 +640,111 @@ Module.register("MMM-TodoistInteractive", {
 		});
 	},
 
-
-
 	getFilteredTasks() {
-	const selectedList =
-		this.listFilter || "all";
-
-	if (
-		selectedList === "all"
-	) {
-		return this.tasks;
-	}
-
-	return this.tasks.filter((task) => {
-		if (!task) {
-			return false;
-		}
-
-		/*
-		 * Todoist normally gives us project_id.
-		 */
-		if (
-			task.project_id !== undefined &&
-			task.project_id !== null
-		) {
-			return (
-				String(task.project_id) ===
-				String(selectedList)
-			);
-		}
-
-		/*
-		 * Fallback for our enriched
-		 * projectName property.
-		 */
-		if (
-			task.projectName
-		) {
-			const project =
-				this.projects.find(
-					(item) =>
-						item.name ===
-						task.projectName
-				);
-
-			if (project) {
-				return (
-					String(project.id) ===
-					String(selectedList)
-				);
+		const selectedList =
+			this.listFilter || "all";
+	
+		const selectedAssignee =
+			this.assigneeFilter || "all";
+	
+		return this.tasks.filter((task) => {
+			if (!task) {
+				return false;
 			}
-		}
-
-		return false;
-	});
-},
+	
+			/*
+			 * -------------------------
+			 * LIST / PROJECT FILTER
+			 * -------------------------
+			 */
+	
+			let matchesList = true;
+	
+			if (selectedList !== "all") {
+				matchesList = false;
+	
+				if (
+					task.project_id !== undefined &&
+					task.project_id !== null
+				) {
+					matchesList =
+						String(task.project_id) ===
+						String(selectedList);
+				}
+	
+				/*
+				 * Fallback for enriched
+				 * projectName property.
+				 */
+				if (
+					!matchesList &&
+					task.projectName
+				) {
+					const project =
+						this.projects.find(
+							(item) =>
+								item.name ===
+								task.projectName
+						);
+	
+					if (project) {
+						matchesList =
+							String(project.id) ===
+							String(selectedList);
+					}
+				}
+			}
+	
+			if (!matchesList) {
+				return false;
+			}
+	
+			/*
+			 * -------------------------
+			 * ASSIGNEE FILTER
+			 * -------------------------
+			 */
+	
+			if (
+				selectedAssignee !== "all"
+			) {
+				let taskAssigneeId = null;
+	
+				/*
+				 * Todoist API commonly provides
+				 * assignee_id.
+				 */
+				if (
+					task.assignee_id !== undefined &&
+					task.assignee_id !== null
+				) {
+					taskAssigneeId =
+						String(task.assignee_id);
+				}
+	
+				/*
+				 * Support responsible_uid as well.
+				 */
+				if (
+					!taskAssigneeId &&
+					task.responsible_uid !== undefined &&
+					task.responsible_uid !== null
+				) {
+					taskAssigneeId =
+						String(task.responsible_uid);
+				}
+	
+				if (
+					taskAssigneeId !==
+					String(selectedAssignee)
+				) {
+					return false;
+				}
+			}
+	
+			return true;
+		});
+	},
 
 	/*
 	 * Group tasks into:
