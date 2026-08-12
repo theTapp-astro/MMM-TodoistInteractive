@@ -1,6 +1,7 @@
+```css
 /*
  * MMM-TodoistInteractive
- * Compact grouped Todoist layout
+ * Clean, compact Todoist layout
  */
 
 .todoist-interactive {
@@ -16,26 +17,33 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+
 	margin-bottom: 8px;
 }
 
 .todoist-title {
 	font-size: 22px;
 	font-weight: 600;
+
 	color: #ffffff;
 }
 
 .todoist-add-button {
 	width: 28px;
 	height: 28px;
+
 	padding: 0;
+
 	border: 1px solid rgba(255, 255, 255, 0.45);
 	border-radius: 50%;
+
 	background: transparent;
 	color: #ffffff;
+
 	font-size: 22px;
 	font-weight: 300;
 	line-height: 24px;
+
 	cursor: pointer;
 }
 
@@ -45,13 +53,11 @@
 
 /*
  * Sections
- *
- * Each section gets a thin divider above it,
- * except the first section.
  */
 .todoist-section {
 	margin: 0;
 	padding: 7px 0 5px 0;
+
 	border-top: 1px solid rgba(255, 255, 255, 0.28);
 }
 
@@ -62,9 +68,6 @@
 
 /*
  * Section titles
- *
- * Overdue / Due Today / Due Tomorrow /
- * Upcoming / No Due Date
  */
 .todoist-section-header {
 	margin: 0 0 3px 0;
@@ -75,7 +78,6 @@
 	line-height: 20px;
 
 	color: #ffffff;
-	text-transform: none;
 }
 
 /*
@@ -93,14 +95,15 @@
 	display: flex;
 	align-items: center;
 
+	width: 100%;
+	min-height: 23px;
+
 	margin: 0;
 	padding: 1px 0;
 
-	width: 100%,
-	min-height: 23px;
+	box-sizing: border-box;
 
 	cursor: pointer;
-	box-sizing: border-box;
 }
 
 .todoist-task:hover {
@@ -108,7 +111,7 @@
 }
 
 /*
- * Small completion circles
+ * Small completion circle
  */
 .todoist-checkbox {
 	flex: 0 0 auto;
@@ -142,99 +145,112 @@
 }
 
 /*
- * Task content stays on one compact line.
+ * Task content
+ *
+ * Everything stays on one horizontal line.
  */
 .todoist-task-content {
-	display: flex; 
-	align-items: center; 
-	
-	flex: 1 1 auto; 
-	min-width: 0; 
-	width: 100%; 
+	display: flex;
+	align-items: center;
+
+	flex: 1 1 auto;
+
+	min-width: 0;
+	width: 100%;
+
 	gap: 10px;
+
+	text-align: left;
 }
 
 /*
- * Task + assignee
- *
- * Everything remains on one line.
+ * Task name
  */
-.todoist-task-row {
-	display: flex;
-	align-items: center;
-	min-width: 0;
-	width: 100%;
-}
-
 .todoist-task-text {
-	flex: 1 1 auto;
+	flex: 0 1 auto;
+
 	min-width: 0;
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 
 	font-size: 14px;
 	font-weight: 400;
 	line-height: 20px;
 
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-
 	color: #ffffff;
-}
 
-/*
- * Assignee
- */
-.todoist-assignee {
-	color: rgba(255, 255, 255, 0.55);
-	white-space: nowrap;
+	text-align: left;
 }
 
 /*
  * Metadata
- *
- * Keep this hidden/compact when the task row
- * already has enough information.
  */
 .todoist-task-meta {
 	display: flex;
 	align-items: center;
-	flex: 0 0 auto;
-	gap: 8px;
+	justify-content: flex-start;
 
-	margin: 0;
+	flex: 0 0 auto;
+
+	margin-left: 0;
+
+	gap: 8px;
 
 	font-size: 11px;
 	font-weight: 400;
 	line-height: 18px;
 
-	color: rgba(255, 255, 255, 0.55);
-
 	white-space: nowrap;
-}
 
-/* 
-* Put subtle separators between metadata items. 
-*/ 
-.todoist-task-meta span + span::before {
-	content: "·"; 
-	margin-right: 8px; 
-	color: rgba(255, 255, 255, 0.30); 
-}
-
-/*
- * Due date
- */
-.todoist-due {
-	white-space: nowrap;
-	color: rgba(255, 255, 255, 0.65);
+	text-align: left;
 }
 
 /*
  * Project
+ *
+ * Deliberately subtle.
  */
 .todoist-project {
+	color: rgba(255, 255, 255, 0.38);
+
 	white-space: nowrap;
-	color: rgba(255, 255, 255, 0.55);
+}
+
+/*
+ * Assignee
+ *
+ * Even slightly more subtle than
+ * the project.
+ */
+.todoist-assignee {
+	color: rgba(255, 255, 255, 0.32);
+
+	white-space: nowrap;
+}
+
+/*
+ * Due date
+ *
+ * Keep this brighter so deadlines
+ * are easy to identify.
+ */
+.todoist-due {
+	color: rgba(255, 255, 255, 0.62);
+
+	white-space: nowrap;
+}
+
+/*
+ * Separators between metadata items.
+ */
+.todoist-task-meta span + span::before {
+	content: "·";
+
+	margin-right: 8px;
+
+	color: rgba(255, 255, 255, 0.22);
 }
 
 /*
@@ -250,7 +266,7 @@
 }
 
 /*
- * Empty / loading / error states
+ * Loading / empty / error states
  */
 .todoist-status,
 .todoist-empty,
@@ -266,7 +282,7 @@
 }
 
 /*
- * Add task dialog
+ * Add Task dialog
  */
 .todoist-add-dialog {
 	margin: 8px 0;
@@ -317,12 +333,14 @@
 	margin-bottom: 3px;
 
 	font-size: 12px;
+
 	color: rgba(255, 255, 255, 0.65);
 }
 
 .todoist-add-dialog-buttons {
 	display: flex;
 	justify-content: flex-end;
+
 	gap: 7px;
 
 	margin-top: 10px;
@@ -355,6 +373,4 @@
 	opacity: 0.4;
 	cursor: default;
 }
-
-
-
+```
