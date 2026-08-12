@@ -405,3 +405,26 @@
 	border-color: rgba(255, 255, 255, 0.55);
 }
 
+.todoist-assignee-filter {
+	padding: 2px 5px;
+
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 3px;
+
+	background: rgba(0, 0, 0, 0.35);
+	color: rgba(255, 255, 255, 0.70);
+
+	font-family: inherit;
+	font-size: 11px;
+
+	cursor: pointer;
+}
+
+.todoist-assignee-filter:hover {
+	border-color: rgba(255, 255, 255, 0.45);
+}
+
+.todoist-assignee-filter:focus {
+	outline: none;
+	border-color: rgba(255, 255, 255, 0.55);
+}
