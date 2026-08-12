@@ -1,3 +1,452 @@
+# MMM-TodoistInteractive
+
+An interactive Todoist module for [MagicMirror²](https://magicmirror.builders/).
+
+Display your Todoist tasks directly on your MagicMirror with a clean, compact interface. Tasks can be completed directly from the mirror, new tasks can be added, and tasks can be filtered by Todoist list/project.
+
+## Features
+
+* 📋 Display Todoist tasks directly on MagicMirror
+* ✅ Complete and reopen tasks directly from the mirror
+* ➕ Add new Todoist tasks
+* 📅 Add due dates when creating tasks
+* 📁 Select a Todoist project/list when creating tasks
+* 🔎 Filter displayed tasks by Todoist list/project
+* 📆 Multiple task views:
+
+  * Today
+  * Today + Tomorrow
+  * All
+* 🚨 Automatically separates overdue tasks
+* 📅 Groups tasks into:
+
+  * Overdue
+  * Due Today
+  * Due Tomorrow
+  * Upcoming
+  * No Due Date
+* 👤 Display task assignees
+* 📁 Display task projects
+* 🔄 Automatically refresh Todoist tasks
+* 📏 Configurable module width
+* 🖥️ Designed specifically for MagicMirror displays
+* 🧩 Multiple instances can be placed on the same MagicMirror
+
+## Screenshots
+
+Screenshots coming soon.
+
+The recommended screenshots will demonstrate:
+
+### Main Task View
+
+Show the module displaying:
+
+* Overdue
+* Due Today
+* Due Tomorrow
+* Upcoming
+* No Due Date
+
+Example:
+
+```text
+Todoist Tasks!       [All Lists ▼]       +
+
+Overdue
+────────────────────────────────────────
+○ Call Bob          Work · Yesterday · John
+○ Finish proposal   Work · Yesterday · Sarah
+
+Due Today
+────────────────────────────────────────
+○ Send invoice      Work · Today · John
+○ Review contract   Work · Today · Sarah
+
+Due Tomorrow
+────────────────────────────────────────
+○ Prepare slides    Work · Tomorrow · John
+```
+
+### Adding a Task
+
+Show the Add Task interface with:
+
+* Task name
+* Due date
+* Project/list selection
+* Add/Cancel controls
+
+### List Filtering
+
+Show the list selector with several Todoist projects/lists available.
+
+Example:
+
+```text
+[All Lists ▼]
+ ├─ All Lists
+ ├─ Work
+ ├─ Personal
+ ├─ Home
+ └─ Projects
+```
+
+## Installation
+
+Navigate to your MagicMirror modules directory:
+
+```bash
+cd ~/MagicMirror/modules
+```
+
+Clone the repository:
+
+```bash
+git clone https://github.com/theTapp-astro/MMM-TodoistInteractive.git
+```
+
+Enter the module directory:
+
+```bash
+cd MMM-TodoistInteractive
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+## Todoist API Token
+
+This module requires a Todoist API token.
+
+You can obtain your Todoist API token from your Todoist account settings.
+
+Keep your API token private. Do not commit it to GitHub.
+
+Your MagicMirror configuration should contain the token locally, rather than storing it in the repository.
+
+## Configuration
+
+Add the module to your MagicMirror `config.js`:
+
+```javascript
+{
+	module: "MMM-TodoistInteractive",
+	position: "top_right",
+
+	config: {
+		todoistToken: "YOUR_TODOIST_API_TOKEN",
+
+		updateInterval: 60000,
+
+		width: "450px",
+
+		maxTasks: 20,
+
+		showCompleted: false,
+
+		showDueDate: true,
+
+		showProject: true,
+
+		showAssignee: true,
+
+		view: "all",
+
+		list: "all"
+	}
+},
+```
+
+## Configuration Options
+
+| Option           | Default   | Description                                    |
+| ---------------- | --------- | ---------------------------------------------- |
+| `todoistToken`   | required  | Your Todoist API token                         |
+| `updateInterval` | `60000`   | How often tasks are refreshed, in milliseconds |
+| `width`          | `"450px"` | Width of the module                            |
+| `maxTasks`       | `20`      | Maximum number of tasks displayed              |
+| `showCompleted`  | `false`   | Display completed tasks                        |
+| `showDueDate`    | `true`    | Display task due dates                         |
+| `showProject`    | `true`    | Display the Todoist project/list               |
+| `showAssignee`   | `true`    | Display the task assignee                      |
+| `view`           | `"all"`   | Default task view                              |
+| `list`           | `"all"`   | Default Todoist list/project filter            |
+
+## Views
+
+### Today
+
+Displays tasks due today.
+
+```javascript
+view: "today"
+```
+
+### Today + Tomorrow
+
+Displays today's and tomorrow's tasks.
+
+```javascript
+view: "today-tomorrow"
+```
+
+### All
+
+Displays tasks grouped by due date:
+
+```javascript
+view: "all"
+```
+
+The All view organizes tasks into:
+
+1. Overdue
+2. Due Today
+3. Due Tomorrow
+4. Upcoming
+5. No Due Date
+
+## List Filtering
+
+You can configure a default Todoist list/project:
+
+```javascript
+list: "Work"
+```
+
+Or show tasks from all lists:
+
+```javascript
+list: "all"
+```
+
+The list selector on the mirror can then be used to change the active filter interactively.
+
+For example:
+
+```text
+Todoist Tasks!       [Work ▼]       +
+```
+
+Changing the selection immediately filters the displayed tasks.
+
+## Adding Tasks
+
+Click the `+` button to open the Add Task interface.
+
+A new task can include:
+
+* Task name
+* Due date
+* Todoist project/list
+
+The task is created directly in Todoist.
+
+## Completing Tasks
+
+Click the circle next to a task to complete it.
+
+Completed tasks can be reopened by clicking the completion indicator again.
+
+## Refresh Interval
+
+The default refresh interval is:
+
+```javascript
+updateInterval: 60000
+```
+
+This equals **60 seconds**.
+
+Examples:
+
+### 30 seconds
+
+```javascript
+updateInterval: 30000
+```
+
+### 5 minutes
+
+```javascript
+updateInterval: 300000
+```
+
+Task changes made directly through the module are refreshed immediately.
+
+## Multiple Instances
+
+Multiple instances of `MMM-TodoistInteractive` can be added to the same MagicMirror.
+
+For example, you could create a Work task display:
+
+```javascript
+{
+	module: "MMM-TodoistInteractive",
+	position: "top_left",
+
+	config: {
+		todoistToken: "YOUR_TODOIST_API_TOKEN",
+
+		width: "400px",
+
+		view: "today",
+
+		list: "Work"
+	}
+},
+```
+
+and a Personal task display:
+
+```javascript
+{
+	module: "MMM-TodoistInteractive",
+	position: "top_right",
+
+	config: {
+		todoistToken: "YOUR_TODOIST_API_TOKEN",
+
+		width: "400px",
+
+		view: "all",
+
+		list: "Personal"
+	}
+},
+```
+
+> **Note:** Multiple-instance support is intended for instances using the same Todoist account. Instance-specific handling of node-helper state may be expanded as the module develops.
+
+## Layout
+
+The module is designed to remain compact on a MagicMirror display.
+
+Tasks are displayed on a single line where possible:
+
+```text
+○ Task name        Project · Due Date · Assignee
+```
+
+The visual hierarchy is intentionally subtle:
+
+* Task name — bright
+* Section headings — bold and prominent
+* Due date — moderately bright
+* Project — subdued
+* Assignee — subdued
+
+Sections are separated by thin horizontal lines.
+
+## Development
+
+This project is being developed specifically for MagicMirror².
+
+Repository:
+
+https://github.com/theTapp-astro/MMM-TodoistInteractive
+
+Clone the repository and make changes locally:
+
+```bash
+git clone https://github.com/theTapp-astro/MMM-TodoistInteractive.git
+```
+
+After making changes:
+
+```bash
+git add .
+git commit -m "Describe your change"
+git push
+```
+
+Then update the module on the MagicMirror:
+
+```bash
+cd ~/MagicMirror/modules/MMM-TodoistInteractive
+git pull
+```
+
+Restart MagicMirror after updating.
+
+## Troubleshooting
+
+### Module does not appear
+
+Check that the module directory is exactly:
+
+```text
+modules/MMM-TodoistInteractive/
+```
+
+and that the main file is:
+
+```text
+MMM-TodoistInteractive.js
+```
+
+The module must be registered as:
+
+```javascript
+Module.register("MMM-TodoistInteractive", {
+```
+
+### Node helper starts but tasks do not appear
+
+Check the MagicMirror log for:
+
+```text
+[MMM-TodoistInteractive] Node helper started
+```
+
+Then check the Chromium developer console for JavaScript errors.
+
+### Todoist tasks do not update
+
+Verify:
+
+* Your Todoist API token is correct.
+* MagicMirror has internet access.
+* `updateInterval` is configured correctly.
+* The selected list/project still exists in Todoist.
+
+### API token security
+
+Never commit your Todoist API token to GitHub.
+
+If a token is accidentally committed to a public repository, revoke it through Todoist and generate a new one.
+
+## Roadmap
+
+Potential future improvements include:
+
+* [ ] Interactive View selector
+* [ ] Better multi-instance isolation
+* [ ] Task editing
+* [ ] Task deletion
+* [ ] Drag-and-drop task ordering
+* [ ] Priority indicators
+* [ ] Labels
+* [ ] Sections
+* [ ] Subtasks
+* [ ] Recurring task support
+* [ ] More configurable styling
+* [ ] Optional compact mode
+* [ ] Touch-friendly controls
+* [ ] Additional Todoist filters
+
+## License
+
+MIT License
+
+Copyright © 2026 theTapp-astro
+
+```
+```
 # TodoistInteractive
 
 An interactive [MagicMirror²](https://magicmirror.builders/) module for [Todoist](https://todoist.com/) that lets you view and manage your tasks directly from your smart mirror.
