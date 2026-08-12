@@ -285,10 +285,14 @@ Module.register("MMM-TodoistInteractive", {
 		 */
 		let displayTasks = this.getFilteredTasks();
 
+
 		if (
 			this.config.view === "today-tomorrow"
 		) {
-			displayTasks = this.getTodayTomorrowTasks();
+			displayTasks =
+				this.getTodayTomorrowTasks(
+					displayTasks
+				);
 		}
 
 		/*
