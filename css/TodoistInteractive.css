@@ -1,515 +1,346 @@
 /*
- * TodoistInteractive
- * MagicMirror² Todoist module
+ * MMM-TodoistInteractive
+ * Compact grouped Todoist layout
  */
 
 .todoist-interactive {
-	width: 100%;
-	min-width: 300px;
-	color: #ffffff;
+	box-sizing: border-box;
 	font-family: inherit;
+	color: #ffffff;
 }
 
 /*
  * Header
  */
-
 .todoist-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 }
 
 .todoist-title {
-	font-size: 24px;
-	font-weight: 500;
+	font-size: 22px;
+	font-weight: 600;
 	color: #ffffff;
 }
 
-/*
- * Status messages
- */
-
-.todoist-status,
-.todoist-empty {
-	font-size: 18px;
-	color: #aaa;
-	padding: 8px 0;
+.todoist-add-button {
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	border-radius: 50%;
+	background: transparent;
+	color: #ffffff;
+	font-size: 22px;
+	font-weight: 300;
+	line-height: 24px;
+	cursor: pointer;
 }
 
-.todoist-error {
-	color: #ff6b6b;
-	font-size: 16px;
-	padding: 8px 0;
+.todoist-add-button:hover {
+	background: rgba(255, 255, 255, 0.12);
+}
+
+/*
+ * Sections
+ *
+ * Each section gets a thin divider above it,
+ * except the first section.
+ */
+.todoist-section {
+	margin: 0;
+	padding: 7px 0 5px 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.todoist-section:first-child {
+	border-top: none;
+	padding-top: 2px;
+}
+
+/*
+ * Section titles
+ *
+ * Overdue / Due Today / Due Tomorrow /
+ * Upcoming / No Due Date
+ */
+.todoist-section-header {
+	margin: 0 0 3px 0;
+	padding: 0;
+
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 20px;
+
+	color: #ffffff;
+	text-transform: none;
 }
 
 /*
  * Task list
  */
-
 .todoist-task-list {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	margin: 0;
+	padding: 0;
 }
 
 /*
  * Individual task
- *
- * The entire row is intentionally large enough
- * to be comfortable on a touchscreen.
  */
-
 .todoist-task {
 	display: flex;
-	align-items: flex-start;
-	width: 100%;
-	min-height: 52px;
-	padding: 8px 4px;
+	align-items: center;
 
-	box-sizing: border-box;
+	margin: 0;
+	padding: 2px 0;
 
-	border-radius: 6px;
-
-	transition:
-		background-color 0.15s ease,
-		opacity 0.15s ease;
+	min-height: 25px;
 
 	cursor: pointer;
 }
 
 .todoist-task:hover {
-	background-color: rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 /*
- * Checkbox
+ * Small completion circles
  */
-
 .todoist-checkbox {
-	flex: 0 0 26px;
+	flex: 0 0 auto;
 
-	width: 26px;
-	height: 26px;
+	width: 16px;
+	height: 16px;
 
-	margin: 0 10px 0 0;
+	margin: 0 7px 0 0;
 	padding: 0;
 
-	border: 2px solid #aaa;
+	border: 1px solid rgba(255, 255, 255, 0.65);
 	border-radius: 50%;
 
 	background: transparent;
 	color: #ffffff;
 
-	font-family: inherit;
-	font-size: 16px;
-	line-height: 22px;
+	font-size: 10px;
+	line-height: 14px;
 
 	cursor: pointer;
-
-	-webkit-tap-highlight-color: transparent;
-
-	transition:
-		background-color 0.15s ease,
-		border-color 0.15s ease,
-		transform 0.1s ease;
 }
 
 .todoist-checkbox:hover {
 	border-color: #ffffff;
+	background: rgba(255, 255, 255, 0.10);
 }
 
-.todoist-checkbox:active {
-	transform: scale(0.9);
+.todoist-checkbox.updating {
+	opacity: 0.5;
+	cursor: default;
 }
 
 /*
- * Completed checkbox
+ * Task content stays on one compact line.
  */
+.todoist-task-content {
+	flex: 1 1 auto;
+	min-width: 0;
+}
 
-.todoist-task.completed .todoist-checkbox {
-	border-color: #808080;
-	background-color: #808080;
+/*
+ * Task + assignee
+ *
+ * Everything remains on one line.
+ */
+.todoist-task-row {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	width: 100%;
+}
+
+.todoist-task-text {
+	flex: 1 1 auto;
+	min-width: 0;
+
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 18px;
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
 	color: #ffffff;
 }
 
 /*
- * Task content
+ * Assignee
  */
+.todoist-assignee {
+	flex: 0 0 auto;
 
-.todoist-task-content {
-	flex: 1;
-	min-width: 0;
-	padding-top: 2px;
+	margin-left: 10px;
+
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 18px;
+
+	color: rgba(255, 255, 255, 0.62);
+
+	white-space: nowrap;
 }
 
 /*
- * Task name
+ * Metadata
+ *
+ * Keep this hidden/compact when the task row
+ * already has enough information.
  */
-
-.todoist-task-text {
-	font-size: 20px;
-	line-height: 1.25;
-
-	overflow-wrap: break-word;
-	word-break: break-word;
-}
-
-/*
- * Completed task
- */
-
-.todoist-task.completed {
-	opacity: 0.55;
-}
-
-.todoist-task.completed .todoist-task-text {
-	text-decoration: line-through;
-	color: #aaa;
-}
-
-/*
- * Task metadata
- */
-
 .todoist-task-meta {
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
-
 	gap: 8px;
 
-	margin-top: 4px;
+	margin: 0;
 
-	font-size: 14px;
-	line-height: 1.2;
-	color: #999;
+	font-size: 11px;
+	line-height: 14px;
+
+	color: rgba(255, 255, 255, 0.55);
 }
 
 /*
  * Due date
  */
-
 .todoist-due {
-	color: #aaa;
+	white-space: nowrap;
 }
 
 /*
- * Project name
+ * Project
  */
-
 .todoist-project {
-	color: #888;
+	white-space: nowrap;
+	color: rgba(255, 255, 255, 0.50);
 }
 
 /*
- * Separate metadata items visually
+ * Completed tasks
  */
+.todoist-task.completed {
+	opacity: 0.55;
+}
 
-.todoist-project::before {
-	content: "•";
-	margin-right: 8px;
-	color: #666;
+.todoist-task.completed
+.todoist-task-text {
+	text-decoration: line-through;
 }
 
 /*
- * Footer
+ * Empty / loading / error states
  */
+.todoist-status,
+.todoist-empty,
+.todoist-error {
+	padding: 5px 0;
 
-.todoist-footer {
-	margin-top: 8px;
-
-	font-size: 12px;
-	color: #666;
-
-	text-align: right;
+	font-size: 14px;
+	line-height: 18px;
 }
 
-/*
- * Touch devices
- */
-
-@media (pointer: coarse) {
-	.todoist-task {
-		min-height: 60px;
-		padding-top: 10px;
-		padding-bottom: 10px;
-	}
-
-	.todoist-checkbox {
-		flex-basis: 26px;
-		width: 26px;
-		height: 26px;
-
-		font-size: 16px;
-	}
-}
-
-/*
- * Smaller screens
- */
-
-@media screen and (max-width: 600px) {
-	.todoist-interactive {
-		min-width: 250px;
-	}
-
-	.todoist-title {
-		font-size: 21px;
-	}
-
-	.todoist-task-text {
-		font-size: 18px;
-	}
-
-	.todoist-task-meta {
-		font-size: 13px;
-	}
-}
-
-/*
- * Accessibility / keyboard focus
- */
-
-.todoist-checkbox:focus-visible,
-.todoist-task:focus-visible {
-	outline: 2px solid #ffffff;
-	outline-offset: 2px;
-}
-
-/*
- * Prevent accidental text selection while interacting
- * with the mirror.
- */
-
-.todoist-task,
-.todoist-checkbox {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-}
-
-.todoist-checkbox.updating {
-	opacity: 0.5;
-	cursor: wait;
-}
-
-.todoist-checkbox:disabled {
-	pointer-events: none;
-}
-
-/*
- * Add task button
- */
-
-.todoist-add-button {
-	width: 30px;
-	height: 30px;
-
-	padding: 0;
-
-	border: 1px solid #888;
-	border-radius: 50%;
-
-	background: transparent;
-	color: #ffffff;
-
-	font-family: inherit;
-	font-size: 24px;
-	font-weight: 300;
-	line-height: 26px;
-
-	cursor: pointer;
-
-	-webkit-tap-highlight-color: transparent;
-
-	transition:
-		background-color 0.15s ease,
-		border-color 0.15s ease,
-		transform 0.1s ease;
-}
-
-.todoist-add-button:hover {
-	background-color: rgba(255, 255, 255, 0.1);
-	border-color: #ffffff;
-}
-
-.todoist-add-button:active {
-	transform: scale(0.9);
+.todoist-error {
+	color: #ff6b6b;
 }
 
 /*
  * Add task dialog
  */
-
 .todoist-add-dialog {
-	margin: 10px 0 14px 0;
-	padding: 14px;
+	margin: 8px 0;
+	padding: 12px;
 
-	border: 1px solid #555;
-	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 5px;
 
-	background: rgba(20, 20, 20, 0.95);
-
-	box-sizing: border-box;
+	background: rgba(0, 0, 0, 0.55);
 }
 
 .todoist-add-dialog-title {
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 
-	font-size: 18px;
-	color: #ffffff;
+	font-size: 17px;
+	font-weight: 700;
 }
 
-/*
- * Task input
- */
-
-.todoist-add-task-input {
-	width: 100%;
-	height: 44px;
-
-	padding: 8px 10px;
-
+.todoist-add-task-input,
+.todoist-add-select {
 	box-sizing: border-box;
 
-	border: 1px solid #777;
-	border-radius: 5px;
+	width: 100%;
 
-	background: #111111;
+	padding: 7px 8px;
+
+	border: 1px solid rgba(255, 255, 255, 0.30);
+	border-radius: 3px;
+
+	background: rgba(255, 255, 255, 0.08);
 	color: #ffffff;
 
 	font-family: inherit;
-	font-size: 18px;
-
-	outline: none;
+	font-size: 14px;
 }
 
-.todoist-add-task-input:focus {
-	border-color: #ffffff;
+.todoist-add-task-input {
+	margin-bottom: 8px;
 }
 
-/*
- * Dialog buttons
- */
+.todoist-add-field {
+	margin-bottom: 8px;
+}
+
+.todoist-add-label {
+	display: block;
+
+	margin-bottom: 3px;
+
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.65);
+}
 
 .todoist-add-dialog-buttons {
 	display: flex;
 	justify-content: flex-end;
-
-	gap: 8px;
+	gap: 7px;
 
 	margin-top: 10px;
 }
 
 .todoist-dialog-button {
-	min-width: 80px;
-	min-height: 38px;
+	padding: 5px 11px;
 
-	padding: 6px 14px;
-
-	border: 1px solid #666;
-	border-radius: 5px;
+	border: 1px solid rgba(255, 255, 255, 0.30);
+	border-radius: 3px;
 
 	background: transparent;
 	color: #ffffff;
 
 	font-family: inherit;
-	font-size: 16px;
+	font-size: 13px;
 
 	cursor: pointer;
-
-	-webkit-tap-highlight-color: transparent;
 }
 
-.todoist-dialog-button:active {
-	transform: scale(0.96);
+.todoist-dialog-button:hover {
+	background: rgba(255, 255, 255, 0.10);
+}
+
+.todoist-confirm-button {
+	background: rgba(255, 255, 255, 0.12);
 }
 
 .todoist-dialog-button:disabled {
 	opacity: 0.4;
-	cursor: wait;
+	cursor: default;
 }
-
-.todoist-confirm-button {
-	border-color: #ffffff;
-}
-
-.todoist-cancel-button {
-	color: #aaa;
-}
-
-/*
- * Touch screens
- */
-
-@media (pointer: coarse) {
-	.todoist-add-button {
-		width: 34px;
-		height: 34px;
-
-		font-size: 26px;
-	}
-
-	.todoist-add-task-input {
-		height: 50px;
-		font-size: 20px;
-	}
-
-	.todoist-dialog-button {
-		min-height: 44px;
-		padding-left: 18px;
-		padding-right: 18px;
-	}
-}
-
-/*
- * Add-task fields
- */
-
-.todoist-add-field {
-	display: flex;
-	align-items: center;
-
-	margin-top: 10px;
-
-	gap: 10px;
-}
-
-.todoist-add-label {
-	flex: 0 0 75px;
-
-	font-size: 16px;
-	color: #aaa;
-}
-
-.todoist-add-select {
-	flex: 1;
-
-	height: 42px;
-
-	padding: 6px 10px;
-
-	border: 1px solid #777;
-	border-radius: 5px;
-
-	background: #111;
-	color: #fff;
-
-	font-family: inherit;
-	font-size: 17px;
-
-	outline: none;
-}
-
-.todoist-add-select:focus {
-	border-color: #fff;
-}
-
-@media (pointer: coarse) {
-	.todoist-add-select {
-		height: 48px;
-		font-size: 19px;
-	}
-}
+```
