@@ -1,4 +1,3 @@
-```css
 /*
  * MMM-TodoistInteractive
  * Clean, compact Todoist layout
@@ -373,4 +372,36 @@
 	opacity: 0.4;
 	cursor: default;
 }
-```
+
+.todoist-header-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+
+	min-width: 0;
+}
+
+.todoist-list-filter {
+	padding: 2px 5px;
+
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 3px;
+
+	background: rgba(0, 0, 0, 0.35);
+	color: rgba(255, 255, 255, 0.70);
+
+	font-family: inherit;
+	font-size: 11px;
+
+	cursor: pointer;
+}
+
+.todoist-list-filter:hover {
+	border-color: rgba(255, 255, 255, 0.45);
+}
+
+.todoist-list-filter:focus {
+	outline: none;
+	border-color: rgba(255, 255, 255, 0.55);
+}
+
