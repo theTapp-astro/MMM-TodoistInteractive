@@ -19,6 +19,9 @@ Module.register("MMM-TodoistInteractive", {
 		// "all"
 		view: "today",
 
+		//Name of the list from Todoist
+		list: "all",
+
 		// Display settings
 		showCompleted: false,
 		showDueDate: true,
@@ -33,6 +36,8 @@ Module.register("MMM-TodoistInteractive", {
 
 	this.tasks = [];
 	this.projects = [];
+
+	this.listFilter = this.config.list || "all";
 
 	this.loading = true;
 	this.error = null;
@@ -85,27 +90,157 @@ Module.register("MMM-TodoistInteractive", {
 		/*
 		 * Header
 		 */
-		const header = document.createElement("div");
-		header.className = "todoist-header";
-
-		const title = document.createElement("div");
-		title.className = "todoist-title";
-		title.textContent = "Todoist Tasks!";
-
-		header.appendChild(title);
-
-		const addButton = document.createElement("button");
-		addButton.className = "todoist-add-button";
-		addButton.type = "button";
-		addButton.setAttribute("aria-label", "Add task");
-		addButton.textContent = "+";
-
-		addButton.addEventListener("click", (event) => {
-			event.stopPropagation();
-			this.openAddTaskDialog();
+		const header =
+			document.createElement("div");
+		
+		header.className =
+			"todoist-header";
+		
+		/*
+		 * Header left side
+		 */
+		const headerLeft =
+			document.createElement("div");
+		
+		headerLeft.className =
+			"todoist-header-left";
+		
+		const title =
+			document.createElement("div");
+		
+		title.className =
+			"todoist-title";
+		
+		title.textContent =
+			"Todoist Tasks!";
+		
+		headerLeft.appendChild(title);
+		
+		/*
+		 * List filter
+		 */
+		const listFilter =
+			document.createElement("select");
+		
+		listFilter.className =
+			"todoist-list-filter";
+		
+		/*
+		 * All lists option
+		 */
+		const allOption =
+			document.createElement("option");
+		
+		allOption.value = "all";
+		allOption.textContent = "All Lists";
+		
+		listFilter.appendChild(allOption);
+		
+		/*
+		 * Todoist projects
+		 */
+		this.projects.forEach((project) => {
+			const option =
+				document.createElement("option");
+		
+			option.value =
+				String(project.id);
+		
+			option.textContent =
+				project.name;
+		
+			listFilter.appendChild(option);
 		});
-
-		header.appendChild(addButton);
+		
+		/*
+		 * Determine the selected value.
+		 *
+		 * The config can use either:
+		 *
+		 * list: "all"
+		 *
+		 * or:
+		 *
+		 * list: "Work"
+		 *
+		 * If the config contains a project name,
+		 * convert it to that project's ID.
+		 */
+		let selectedList =
+			this.listFilter || "all";
+		
+		if (
+			selectedList !== "all"
+		) {
+			const matchingProject =
+				this.projects.find(
+					(project) =>
+						String(project.id) ===
+							String(selectedList) ||
+						project.name ===
+							selectedList
+				);
+		
+			if (matchingProject) {
+				selectedList =
+					String(matchingProject.id);
+			}
+		}
+		
+		listFilter.value =
+			selectedList;
+		
+		/*
+		 * Change filter immediately.
+		 */
+		listFilter.addEventListener(
+			"change",
+			(event) => {
+				this.listFilter =
+					event.target.value;
+		
+				this.updateDom(100);
+			}
+		);
+		
+		headerLeft.appendChild(
+			listFilter
+		);
+		
+		header.appendChild(
+			headerLeft
+		);
+		
+		/*
+		 * Add button
+		 */
+		const addButton =
+			document.createElement("button");
+		
+		addButton.className =
+			"todoist-add-button";
+		
+		addButton.type = "button";
+		
+		addButton.setAttribute(
+			"aria-label",
+			"Add task"
+		);
+		
+		addButton.textContent = "+";
+		
+		addButton.addEventListener(
+			"click",
+			(event) => {
+				event.stopPropagation();
+				this.openAddTaskDialog();
+			}
+		);
+		
+		header.appendChild(
+			addButton
+		);
+		
 		wrapper.appendChild(header);
 
 		/*
@@ -148,7 +283,7 @@ Module.register("MMM-TodoistInteractive", {
 		/*
 		 * Get tasks appropriate for the selected view.
 		 */
-		let displayTasks = this.tasks;
+		let displayTasks = this.getFilteredTasks();
 
 		if (
 			this.config.view === "today-tomorrow"
@@ -342,7 +477,7 @@ Module.register("MMM-TodoistInteractive", {
 		const tomorrow =
 			this.getLocalDateString(1);
 
-		return this.tasks.filter((task) => {
+		return tasks.filter((task) => {
 			const date =
 				this.getTaskDate(task);
 
@@ -352,6 +487,60 @@ Module.register("MMM-TodoistInteractive", {
 			);
 		});
 	},
+
+	getFilteredTasks() {
+	const selectedList =
+		this.listFilter || "all";
+
+	if (
+		selectedList === "all"
+	) {
+		return this.tasks;
+	}
+
+	return this.tasks.filter((task) => {
+		if (!task) {
+			return false;
+		}
+
+		/*
+		 * Todoist normally gives us project_id.
+		 */
+		if (
+			task.project_id !== undefined &&
+			task.project_id !== null
+		) {
+			return (
+				String(task.project_id) ===
+				String(selectedList)
+			);
+		}
+
+		/*
+		 * Fallback for our enriched
+		 * projectName property.
+		 */
+		if (
+			task.projectName
+		) {
+			const project =
+				this.projects.find(
+					(item) =>
+						item.name ===
+						task.projectName
+				);
+
+			if (project) {
+				return (
+					String(project.id) ===
+					String(selectedList)
+				);
+			}
+		}
+
+		return false;
+	});
+},
 
 	/*
 	 * Group tasks into:
@@ -1131,6 +1320,11 @@ Module.register("MMM-TodoistInteractive", {
 			case "CONFIG_READY":
 				Log.info("MMM-TodoistInteractive: CONFIG_READY received");
 				this.configReady = true;
+				
+				this.sendSocketNotification(
+					"GET_PROJECTS"
+				);
+				
 				this.requestTasks();
 				break;
 
