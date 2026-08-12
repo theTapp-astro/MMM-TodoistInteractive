@@ -463,30 +463,32 @@ Module.register("MMM-TodoistInteractive", {
 
 		return wrapper;
 	},
-
+ 
 	/*
 	 * Get tasks for Today + Tomorrow.
 	 *
-	 * This uses the full task set returned by
-	 * the helper and filters it locally.
+	 * This uses the task set supplied by getDom()
+	 * and filters it locally.
 	 */
-	getTodayTomorrowTasks() {
+	getTodayTomorrowTasks(tasks) {
 		const today =
 			this.getLocalDateString(0);
-
+	
 		const tomorrow =
 			this.getLocalDateString(1);
-
+	
 		return tasks.filter((task) => {
 			const date =
 				this.getTaskDate(task);
-
+	
 			return (
 				date === today ||
 				date === tomorrow
 			);
 		});
 	},
+
+
 
 	getFilteredTasks() {
 	const selectedList =
@@ -1307,13 +1309,13 @@ Module.register("MMM-TodoistInteractive", {
 	socketNotificationReceived(
 		notification,
 		payload
-	) {
-		Log.info(
-			"[" +
-			this.name +
-			"] Socket notification: " +
-			notification
-		);
+		) {
+			Log.info(
+				"[" +
+				this.name +
+				"] Socket notification: " +
+				notification
+			);
 
 		switch (notification) {
 		
