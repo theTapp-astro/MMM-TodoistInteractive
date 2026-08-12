@@ -847,39 +847,39 @@ Module.register("MMM-TodoistInteractive", {
 	createTaskElement(task) {
 		const taskElement =
 			document.createElement("div");
-
+	
 		taskElement.className =
 			"todoist-task";
-
+	
 		if (task.completed) {
 			taskElement.classList.add(
 				"completed"
 			);
 		}
-
+	
 		/*
-		 * Checkbox
+		 * Completion checkbox
 		 */
 		const checkbox =
 			document.createElement("button");
-
+	
 		checkbox.className =
 			"todoist-checkbox";
-
+	
 		checkbox.type = "button";
-
+	
 		checkbox.setAttribute(
 			"aria-label",
 			task.completed
 				? "Reopen task"
 				: "Complete task"
 		);
-
+	
 		checkbox.textContent =
 			task.completed
 				? "✓"
 				: "";
-
+	
 		if (
 			this.updatingTasks.has(
 				String(task.id)
@@ -888,11 +888,11 @@ Module.register("MMM-TodoistInteractive", {
 			checkbox.classList.add(
 				"updating"
 			);
-
+	
 			checkbox.disabled = true;
 			checkbox.textContent = "…";
 		}
-
+	
 		checkbox.addEventListener(
 			"click",
 			(event) => {
@@ -900,113 +900,117 @@ Module.register("MMM-TodoistInteractive", {
 				this.toggleTask(task);
 			}
 		);
-
+	
 		taskElement.appendChild(
 			checkbox
 		);
-
+	
 		/*
-		 * Task content
+		 * Everything after the checkbox lives
+		 * on the same horizontal line.
 		 */
 		const content =
 			document.createElement("div");
-
+	
 		content.className =
 			"todoist-task-content";
-
-		const taskRow =
-			document.createElement("div");
-
-		taskRow.className =
-			"todoist-task-row";
-
+	
+		/*
+		 * Task name
+		 */
 		const taskText =
 			document.createElement("div");
-
+	
 		taskText.className =
 			"todoist-task-text";
-
+	
 		taskText.textContent =
 			task.content || "";
-
-		taskRow.appendChild(taskText);
-
+	
+		content.appendChild(taskText);
+	
 		/*
-		 * Assignee
-		 */
-		if (this.config.showAssignee) {
-			const assignee =
-				this.getAssigneeName(task);
-
-			if (assignee) {
-				const assigneeElement =
-					document.createElement(
-						"div"
-					);
-
-				assigneeElement.className =
-					"todoist-assignee";
-
-				assigneeElement.textContent =
-					assignee;
-
-				taskRow.appendChild(
-					assigneeElement
-				);
-			}
-		}
-
-		content.appendChild(taskRow);
-
-		/*
-		 * Metadata
+		 * Metadata container
 		 */
 		const metadata =
 			document.createElement("div");
-
+	
 		metadata.className =
 			"todoist-task-meta";
-
-		if (
-			this.config.showDueDate &&
-			task.due
-		) {
-			const due =
-				document.createElement("span");
-
-			due.className =
-				"todoist-due";
-
-			due.textContent =
-				task.due.string || "";
-
-			metadata.appendChild(due);
-		}
-
+	
+		/*
+		 * Project
+		 */
 		if (
 			this.config.showProject &&
 			task.projectName
 		) {
 			const project =
 				document.createElement("span");
-
+	
 			project.className =
 				"todoist-project";
-
+	
 			project.textContent =
 				task.projectName;
-
+	
 			metadata.appendChild(project);
 		}
-
+	
+		/*
+		 * Due date
+		 */
+		if (
+			this.config.showDueDate &&
+			task.due
+		) {
+			const due =
+				document.createElement("span");
+	
+			due.className =
+				"todoist-due";
+	
+			due.textContent =
+				task.due.string || "";
+	
+			metadata.appendChild(due);
+		}
+	
+		/*
+		 * Assignee
+		 */
+		if (this.config.showAssignee) {
+			const assignee =
+				this.getAssigneeName(task);
+	
+			if (assignee) {
+				const assigneeElement =
+					document.createElement("span");
+	
+				assigneeElement.className =
+					"todoist-assignee";
+	
+				assigneeElement.textContent =
+					assignee;
+	
+				metadata.appendChild(
+					assigneeElement
+				);
+			}
+		}
+	
+		/*
+		 * Only add metadata if there is
+		 * actually something to display.
+		 */
 		if (
 			metadata.childNodes.length > 0
 		) {
 			content.appendChild(metadata);
 		}
-
+	
 		taskElement.appendChild(content);
-
+	
 		/*
 		 * Clicking the task itself.
 		 */
@@ -1016,7 +1020,7 @@ Module.register("MMM-TodoistInteractive", {
 				this.selectTask(task);
 			}
 		);
-
+	
 		return taskElement;
 	},
 
