@@ -281,27 +281,100 @@ module.exports = NodeHelper.create({
 			 * Get projects separately because the task object contains
 			 * project_id, while the UI wants a human-readable name.
 			 */
-			const projects = await this.getAllProjects();
-
-			const projectMap = new Map();
-
+			const projects =
+				await this.getAllProjects();
+			
+			const projectMap =
+				new Map();
+			
 			for (const project of projects) {
 				projectMap.set(
 					String(project.id),
 					project.name
 				);
 			}
-
-			const normalizedTasks = tasks.map((task) => {
-				const projectName =
-					projectMap.get(String(task.project_id)) ||
-					"";
 			
-				return {
-					...task,
-					projectName
-				};
-			});
+			/*
+			 * Build an assignee lookup from the
+			 * collaborators of the shared projects.
+			 */
+			const assignees =
+				await this.getAllCollaborators(
+					projects
+				);
+			
+			const assigneeMap =
+				new Map();
+			
+			for (const assignee of assignees) {
+				assigneeMap.set(
+					String(assignee.id),
+					assignee.name
+				);
+			}
+			
+			/*
+			 * Enrich every task with the project
+			 * name and assignee name.
+			 */
+			const normalizedTasks =
+				tasks.map((task) => {
+					const projectName =
+						projectMap.get(
+							String(task.project_id)
+						) || "";
+			
+					let assigneeName = "";
+			
+					if (
+						task.responsible_uid !==
+							undefined &&
+						task.responsible_uid !== null
+					) {
+						assigneeName =
+							assigneeMap.get(
+								String(
+									task.responsible_uid
+								)
+							) || "";
+					}
+			
+					/*
+					 * Fall back to assignee_id if the
+					 * API ever returns that instead.
+					 */
+					if (
+						!assigneeName &&
+						task.assignee_id !==
+							undefined &&
+						task.assignee_id !== null
+					) {
+						assigneeName =
+							assigneeMap.get(
+								String(
+									task.assignee_id
+								)
+							) || "";
+					}
+			
+					return {
+						...task,
+						projectName,
+						assignee_name:
+							assigneeName
+					};
+				});
+			
+			/*
+			 * Send the collaborator list as well so
+			 * the frontend can populate the dropdown
+			 * even when a person has no task in the
+			 * current view.
+			 */
+			this.sendSocketNotification(
+				"ASSIGNEES",
+				assignees
+			);
 
 			/*
 			 * Respect maxTasks on the client, but return the complete
