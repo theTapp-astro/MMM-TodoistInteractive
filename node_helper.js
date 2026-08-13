@@ -35,10 +35,6 @@ module.exports = NodeHelper.create({
 				this.getProjects();
 				break;
 
-			case "GET_ASSIGNEES":
-				this.getAssignees();
-				break;
-				
 			default:
 				console.warn(
 					`[${this.name}] Unknown notification: ${notification}`
