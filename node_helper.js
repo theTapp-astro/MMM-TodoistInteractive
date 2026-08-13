@@ -34,6 +34,10 @@ module.exports = NodeHelper.create({
 			case "GET_PROJECTS":
 				this.getProjects();
 				break;
+
+			case "GET_ASSIGNEES":
+				this.getAssignees();
+				break;
 				
 			default:
 				console.warn(
@@ -117,7 +121,30 @@ module.exports = NodeHelper.create({
 			this.handleApiError(error);
 		}
 	},
+
+	/**
+	 * Get all Todoist collaborators that can be
+	 * used as task assignees.
+	 */
+	async getAssignees() {
+		try {
+			const projects =
+				await this.getAllProjects();
 	
+			const assignees =
+				await this.getAllCollaborators(
+					projects
+				);
+	
+			this.sendSocketNotification(
+				"ASSIGNEES",
+				assignees
+			);
+		} catch (error) {
+			this.handleApiError(error);
+		}
+	},
+		
 	/**
 	 * Store configuration received from the front-end.
 	 */
@@ -353,6 +380,130 @@ module.exports = NodeHelper.create({
 		return tasks;
 	},
 
+	/**
+	 * Get a unique list of collaborators from
+	 * all shared projects.
+	 *
+	 * Todoist exposes collaborators on a
+	 * per-project basis.
+	 */
+	async getAllCollaborators(projects) {
+		const collaboratorMap =
+			new Map();
+	
+		for (const project of projects) {
+			if (
+				!project ||
+				!project.id
+			) {
+				continue;
+			}
+	
+			/*
+			 * Collaborators only apply to shared
+			 * projects. Personal projects do not
+			 * need a collaborator request.
+			 */
+			if (
+				project.is_shared === false &&
+				project.is_shared !== undefined
+			) {
+				continue;
+			}
+	
+			try {
+				let cursor = null;
+	
+				do {
+					const params =
+						new URLSearchParams();
+	
+					params.set(
+						"limit",
+						"200"
+					);
+	
+					if (cursor) {
+						params.set(
+							"cursor",
+							cursor
+						);
+					}
+	
+					const data =
+						await this.todoistRequest(
+							`/projects/${encodeURIComponent(
+								String(project.id)
+							)}/collaborators?${params.toString()}`
+						);
+	
+					if (
+						data?.results &&
+						Array.isArray(
+							data.results
+						)
+					) {
+						for (
+							const collaborator
+							of data.results
+						) {
+							if (
+								!collaborator ||
+								collaborator.id ===
+									undefined ||
+								collaborator.id ===
+									null
+							) {
+								continue;
+							}
+	
+							const id =
+								String(
+									collaborator.id
+								);
+	
+							const name =
+								collaborator.full_name ||
+								collaborator.name ||
+								"";
+	
+							if (
+								!name
+							) {
+								continue;
+							}
+	
+							collaboratorMap.set(
+								id,
+								{
+									id,
+									name
+								}
+							);
+						}
+					}
+	
+					cursor =
+						data?.next_cursor ||
+						null;
+				} while (cursor);
+			} catch (error) {
+				/*
+				 * One inaccessible/non-shared project
+				 * should not prevent collaborators from
+				 * all other projects from appearing.
+				 */
+				console.warn(
+					`[${this.name}] Unable to get collaborators for project ${project.id}: ${error.message}`
+				);
+			}
+		}
+	
+		return Array.from(
+			collaboratorMap.values()
+		);
+	},
+	
 	/**
 	 * Get all active projects.
 	 */
