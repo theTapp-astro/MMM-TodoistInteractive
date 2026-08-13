@@ -1531,10 +1531,6 @@ Module.register("MMM-TodoistInteractive", {
 				this.sendSocketNotification(
 					"GET_PROJECTS"
 				);
-
-				this.sendSocketNotification(
-				"GET_ASSIGNEES"
-				);
 				
 				this.requestTasks();
 				break;
