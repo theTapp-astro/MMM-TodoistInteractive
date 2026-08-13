@@ -36,6 +36,7 @@ Module.register("MMM-TodoistInteractive", {
 
 	this.tasks = [];
 	this.projects = [];
+	this.assignees = [];
 
 	this.listFilter = this.config.list || "all";
 	this.assigneeFilter = "all";
@@ -232,92 +233,37 @@ Module.register("MMM-TodoistInteractive", {
 		);
 		
 		/*
-		 * Build a unique list of assignees
-		 * from the tasks currently available.
+		 * Build the assignee list from the
+		 * collaborator data supplied by Todoist.
 		 */
-		const assignees = [];
-		
-		this.tasks.forEach((task) => {
-			if (!task) {
-				return;
-			}
-		
-			let assigneeId = null;
-			let assigneeName = null;
-		
-			if (
-				task.assignee_id !== undefined &&
-				task.assignee_id !== null
-			) {
-				assigneeId =
-					String(task.assignee_id);
-			}
-		
-			if (
-				task.responsible_uid !== undefined &&
-				task.responsible_uid !== null
-			) {
-				assigneeId =
-					String(task.responsible_uid);
-			}
-		
-			/*
-			 * Support several possible enriched
-			 * assignee name properties.
-			 */
-			if (task.assignee_name) {
-				assigneeName =
-					task.assignee_name;
-			} else if (
-				task.assigneeName
-			) {
-				assigneeName =
-					task.assigneeName;
-			} else if (
-				task.assignee &&
-				typeof task.assignee === "object"
-			) {
-				assigneeName =
-					task.assignee.name;
-			} else if (
-				typeof task.assignee === "string"
-			) {
-				assigneeName =
-					task.assignee;
-			}
-		
-			if (
-				assigneeId &&
-				assigneeName
-			) {
-				const alreadyExists =
-					assignees.some(
-						(person) =>
-							String(person.id) ===
-							String(assigneeId)
-					);
-		
-				if (!alreadyExists) {
-					assignees.push({
-						id: assigneeId,
-						name: assigneeName
-					});
-				}
-			}
-		});
+		const assignees =
+			Array.isArray(this.assignees)
+				? [...this.assignees]
+				: [];
 		
 		/*
 		 * Sort alphabetically.
 		 */
 		assignees.sort(
 			(a, b) =>
-				a.name.localeCompare(b.name)
+				String(a.name || "").localeCompare(
+					String(b.name || "")
+				)
 		);
 		
 		/*
 		 * Add people to dropdown.
 		 */
 		assignees.forEach((person) => {
+			if (
+				!person ||
+				person.id === undefined ||
+				person.id === null ||
+				!person.name
+			) {
+				return;
+			}
+		
 			const option =
 				document.createElement("option");
 		
@@ -334,9 +280,30 @@ Module.register("MMM-TodoistInteractive", {
 		
 		/*
 		 * Restore current selection.
+		 *
+		 * If the selected person is no longer
+		 * available, fall back to All People.
 		 */
-		assigneeFilter.value =
+		const selectedAssignee =
 			this.assigneeFilter || "all";
+		
+		const hasSelectedAssignee =
+			Array.from(
+				assigneeFilter.options
+			).some(
+				(option) =>
+					option.value ===
+					String(selectedAssignee)
+			);
+		
+		assigneeFilter.value =
+			hasSelectedAssignee
+				? String(selectedAssignee)
+				: "all";
+		
+		if (!hasSelectedAssignee) {
+			this.assigneeFilter = "all";
+		}
 		
 		/*
 		 * Change assignee filter.
@@ -704,42 +671,42 @@ Module.register("MMM-TodoistInteractive", {
 			 * ASSIGNEE FILTER
 			 * -------------------------
 			 */
-	
+			
 			if (
 				selectedAssignee !== "all"
 			) {
 				let taskAssigneeId = null;
-	
-				/*
-				 * Todoist API commonly provides
-				 * assignee_id.
-				 */
-				if (
-					task.assignee_id !== undefined &&
-					task.assignee_id !== null
-				) {
-					taskAssigneeId =
-						String(task.assignee_id);
-				}
-	
-				/*
-				 * Support responsible_uid as well.
-				 */
-				if (
-					!taskAssigneeId &&
-					task.responsible_uid !== undefined &&
-					task.responsible_uid !== null
-				) {
-					taskAssigneeId =
-						String(task.responsible_uid);
-				}
-	
-				if (
-					taskAssigneeId !==
-					String(selectedAssignee)
-				) {
-					return false;
-				}
+			
+			/*
+			 * Todoist returns responsible_uid
+			 * for the assigned user.
+			 */
+			if (
+				task.responsible_uid !== undefined &&
+				task.responsible_uid !== null
+			) {
+				taskAssigneeId =
+					String(task.responsible_uid);
+			}
+			
+			/*
+			 * Fall back to assignee_id if present.
+			 */
+			if (
+				!taskAssigneeId &&
+				task.assignee_id !== undefined &&
+				task.assignee_id !== null
+			) {
+				taskAssigneeId =
+					String(task.assignee_id);
+			}
+			
+			if (
+				taskAssigneeId !==
+				String(selectedAssignee)
+			) {
+				return false;
+			}
 			}
 	
 			return true;
@@ -1424,14 +1391,57 @@ Module.register("MMM-TodoistInteractive", {
 		if (!task) {
 			return "";
 		}
-
+	
+		let assigneeId = null;
+	
+		if (
+			task.responsible_uid !== undefined &&
+			task.responsible_uid !== null
+		) {
+			assigneeId =
+				String(task.responsible_uid);
+		} else if (
+			task.assignee_id !== undefined &&
+			task.assignee_id !== null
+		) {
+			assigneeId =
+				String(task.assignee_id);
+		}
+	
+		if (assigneeId) {
+			const assignee =
+				this.assignees.find(
+					(person) =>
+						String(person.id) ===
+						assigneeId
+				);
+	
+			if (
+				assignee &&
+				assignee.name
+			) {
+				return assignee.name;
+			}
+		}
+	
+		/*
+		 * Fall back to an already-enriched
+		 * name if one exists.
+		 */
+		if (
+			typeof task.assignee_name ===
+			"string"
+		) {
+			return task.assignee_name;
+		}
+	
 		if (
 			typeof task.assigneeName ===
 			"string"
 		) {
 			return task.assigneeName;
 		}
-
+	
 		if (
 			task.assignee &&
 			typeof task.assignee.name ===
@@ -1439,21 +1449,14 @@ Module.register("MMM-TodoistInteractive", {
 		) {
 			return task.assignee.name;
 		}
-
+	
 		if (
 			typeof task.assignee ===
 			"string"
 		) {
 			return task.assignee;
 		}
-
-		if (
-			typeof task.assignee_name ===
-			"string"
-		) {
-			return task.assignee_name;
-		}
-
+	
 		return "";
 	},
 
@@ -1528,6 +1531,10 @@ Module.register("MMM-TodoistInteractive", {
 				this.sendSocketNotification(
 					"GET_PROJECTS"
 				);
+
+				this.sendSocketNotification(
+				"GET_ASSIGNEES"
+				);
 				
 				this.requestTasks();
 				break;
@@ -1546,6 +1553,10 @@ Module.register("MMM-TodoistInteractive", {
 
 			case "PROJECTS":
 				this.handleProjects(payload);
+				break;
+
+			case "ASSIGNEES":
+				this.handleAssignees(payload);
 				break;
 
 			case "TODOIST_ERROR":
@@ -1697,6 +1708,25 @@ Module.register("MMM-TodoistInteractive", {
 			this.projects = [];
 		}
 
+		this.updateDom(100);
+	},
+
+	/*
+	 * Handle Todoist collaborators.
+	 */
+	handleAssignees(payload) {
+		if (Array.isArray(payload)) {
+			this.assignees = payload;
+		} else if (
+			payload &&
+			Array.isArray(payload.assignees)
+		) {
+			this.assignees =
+				payload.assignees;
+		} else {
+			this.assignees = [];
+		}
+	
 		this.updateDom(100);
 	},
 
